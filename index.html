@@ -237,7 +237,9 @@ input::placeholder,textarea::placeholder{color:var(--muted2)}
       <button class="mode-btn active-add" id="mh-btn-add" onclick="setHoursMode('add')">+ Añadir horas</button>
       <button class="mode-btn" id="mh-btn-sub" onclick="setHoursMode('sub')">− Quitar horas</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:20px">
+
+    <!-- AÑADIR HORAS panel -->
+    <div id="mh-add-panel" style="display:flex;flex-direction:column;gap:20px">
       <div>
         <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Empleado</div>
         <select id="ah-emp" style="width:100%;background:#181818;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 0;outline:none;color-scheme:dark" onchange="ahUpdateCats()"></select>
@@ -254,23 +256,67 @@ input::placeholder,textarea::placeholder{color:var(--muted2)}
         <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Tarea</div>
         <select id="ah-task" style="width:100%;background:#181818;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 0;outline:none;color-scheme:dark"></select>
       </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Fecha</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="ah-date" type="date" style="flex:1;color-scheme:dark"/>
+          <button onclick="ahUseNow()" style="white-space:nowrap;padding:6px 12px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--text)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">Ahora</button>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div>
-          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Fecha</div>
-          <input id="ah-date" type="date" style="width:100%;color-scheme:dark"/>
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Hora inicio</div>
+          <input id="ah-time-start" type="time" style="width:100%;color-scheme:dark"/>
         </div>
         <div>
-          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Horas</div>
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Horas trabajadas</div>
           <input id="ah-hours" type="number" min="0.25" max="24" step="0.25" placeholder="ej. 3.5" style="width:100%"/>
         </div>
       </div>
-      <div id="mh-sub-info" class="hidden" style="font-size:11px;color:var(--muted);letter-spacing:0.5px;padding:12px 0;border-top:1px solid var(--border)">
-        Se añadirá un registro negativo que restará las horas indicadas del total del empleado en esa categoría y fecha.
+    </div>
+
+    <!-- QUITAR HORAS panel -->
+    <div id="mh-sub-panel" class="hidden" style="display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Empleado</div>
+        <select id="sub-emp" style="width:100%;background:#181818;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 0;outline:none;color-scheme:dark" onchange="subUpdateRecords()"></select>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Registro</div>
+        <select id="sub-rec" style="width:100%;background:#181818;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 0;outline:none;color-scheme:dark" onchange="subRecordChanged()"></select>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Horas a restar</div>
+        <input id="sub-hours" type="number" min="0.25" max="24" step="0.25" placeholder="ej. 1.5" oninput="subUpdatePreview()" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 0;outline:none"/>
+      </div>
+      <div id="sub-preview" style="font-size:11px;color:var(--muted2);letter-spacing:0.5px;padding:12px 0;border-top:1px solid var(--border)">
+        Selecciona un registro y las horas a restar.
       </div>
     </div>
+
     <div class="modal-footer" style="margin-top:32px">
       <button id="mh-save-btn" class="btn b-save" onclick="confirmHours()" style="flex:1;padding:14px;font-size:11px;letter-spacing:2px">Guardar</button>
       <button class="btn-cancel" onclick="document.getElementById('m-hours').classList.add('hidden')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR REGISTRO -->
+<div class="modal-bg hidden" id="m-edit-record">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-eyebrow">Editar registro</div>
+    <div class="modal-title" id="mer-title">Editar horas</div>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div style="font-size:12px;color:var(--muted);letter-spacing:0.5px" id="mer-info"></div>
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Horas trabajadas</div>
+        <input id="mer-hours" type="number" min="0.25" max="24" step="0.25" style="width:100%"/>
+      </div>
+      <div style="font-size:11px;color:var(--muted2);letter-spacing:0.5px;padding:12px 0;border-top:1px solid var(--border)" id="mer-preview"></div>
+    </div>
+    <div class="modal-footer" style="margin-top:32px">
+      <button class="btn b-save" onclick="confirmEditRecord()" style="flex:1;padding:14px;font-size:11px;letter-spacing:2px">Guardar cambios</button>
+      <button class="btn-cancel" onclick="document.getElementById('m-edit-record').classList.add('hidden')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -424,6 +470,28 @@ function dayHours(dateStr){
   return Math.max(0,t);
 }
 
+function dayHoursByEmployee(dateStr){
+  var map={};
+  for(var i=0;i<db.records.length;i++){
+    var r=db.records[i];
+    if(r.endTime&&r.startTime.slice(0,10)===dateStr){
+      var h=durH(r.startTime,r.endTime);
+      var delta=r.negative?-h:h;
+      if(!map[r.employeeId])map[r.employeeId]={name:r.employeeName,h:0};
+      map[r.employeeId].h+=delta;
+    }
+  }
+  var result=[];
+  for(var id in map){
+    var h=Math.max(0,map[id].h);
+    if(h>0){
+      var initials=map[id].name.split(' ').map(function(n){return n[0];}).join('').toUpperCase();
+      result.push(initials+' '+h.toFixed(1)+'h');
+    }
+  }
+  return result;
+}
+
 function renderCalendar(){
   var wrap=document.getElementById('calendar-wrap');
   if(!wrap)return;
@@ -453,13 +521,14 @@ function renderCalendar(){
   for(var d=1;d<=daysInMonth;d++){
     var key=dayKey(calYear,calMonth+1,d);
     var h=dayHours(key);
+    var empLines=dayHoursByEmployee(key);
     var note=db.notes&&db.notes[key]?db.notes[key]:'';
     var isToday=key===todayStr;
     var isSel=key===selectedDay;
     var pct=Math.min(100,h/8*100);
     var barColor=h>=8?'#4ade80':h>=4?'#fbbf24':'#555';
     html+='<div class="cal-day'+(isToday?' today':'')+(isSel?' selected':'')+'" onclick="selectDay(\''+key+'\')"><div class="cal-day-num">'+d+'</div>'
-      +(h>0?'<div class="cal-day-hours">'+h.toFixed(1)+'h</div>':'')
+      +(empLines.length>0?'<div class="cal-day-hours" style="display:flex;flex-wrap:wrap;gap:2px 5px;">'+empLines.map(function(l){return '<span>'+l+'</span>';}).join('')+'</div>':'')
       +(h>0?'<div class="cal-day-bar" style="background:'+barColor+';width:'+pct.toFixed(0)+'%"></div>':'')
       +(note?'<div class="cal-day-note">'+note.replace(/</g,'&lt;')+'</div>':'')
       +'</div>';
@@ -502,7 +571,7 @@ function renderDayPanel(key){
       +'<div class="day-record-info">'+r.categoryName+' / '+r.subName+' / '+r.task+'</div>'
       +'<div class="day-record-info">'+fmtTime(r.startTime)+' → '+fmtTime(r.endTime)+'</div></div>'
       +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<button class="btn b-edit" onclick="openHoursModalForRecord(\''+key+'\','+r.employeeId+')" style="font-size:9px;letter-spacing:1px;padding:6px 10px;white-space:nowrap">± Ajustar</button>'
+      +'<button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:6px 10px;white-space:nowrap">Editar</button>'
       +'<div class="day-record-hours" style="color:'+col+'">'+(r.negative?'−':'')+Math.abs(delta).toFixed(1)+'h</div>'
       +'</div>'
       +'</div>';
@@ -570,20 +639,30 @@ function setHoursMode(mode){
   hoursMode=mode;
   document.getElementById('mh-btn-add').className='mode-btn'+(mode==='add'?' active-add':'');
   document.getElementById('mh-btn-sub').className='mode-btn'+(mode==='sub'?' active-sub':'');
-  document.getElementById('mh-sub-info').classList.toggle('hidden',mode==='add');
+  document.getElementById('mh-add-panel').style.display=mode==='add'?'flex':'none';
+  document.getElementById('mh-sub-panel').classList.toggle('hidden',mode==='add');
   var sb=document.getElementById('mh-save-btn');
   sb.className='btn '+(mode==='add'?'b-save':'b-save-red');
   sb.style.cssText='flex:1;padding:14px;font-size:11px;letter-spacing:2px';
   document.getElementById('mh-title').textContent=mode==='add'?'Añadir horas':'Quitar horas';
+  if(mode==='sub') subUpdateRecords();
+}
+
+function ahUseNow(){
+  var now=new Date();
+  document.getElementById('ah-date').value=now.toISOString().slice(0,10);
+  document.getElementById('ah-time-start').value=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
 }
 
 function openHoursModal(prefillDate){
   hoursMode='add';
   var empSel=document.getElementById('ah-emp');
   empSel.innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('');
+  document.getElementById('sub-emp').innerHTML=empSel.innerHTML;
   ahUpdateCats();
   var d=prefillDate||todayISO();
   document.getElementById('ah-date').value=d;
+  document.getElementById('ah-time-start').value='09:00';
   document.getElementById('ah-hours').value='';
   setHoursMode('add');
   document.getElementById('m-hours').classList.remove('hidden');
@@ -607,27 +686,125 @@ function ahUpdateTasks(){
   document.getElementById('ah-task').innerHTML=(sub?sub.tasks:[]).map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
 }
 
+function subUpdateRecords(){
+  var empId=parseInt(document.getElementById('sub-emp').value);
+  var recs=db.records.filter(function(r){return r.endTime&&!r.negative&&r.employeeId===empId;})
+    .sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});
+  document.getElementById('sub-rec').innerHTML=recs.map(function(r){
+    var h=durH(r.startTime,r.endTime).toFixed(1);
+    return '<option value="'+r.id+'">'+fmtDate(r.startTime)+' · '+r.categoryName+' / '+r.subName+' · '+h+'h</option>';
+  }).join('');
+  document.getElementById('sub-hours').value='';
+  document.getElementById('sub-preview').textContent='Selecciona un registro y las horas a restar.';
+  document.getElementById('sub-preview').style.color='var(--muted2)';
+}
+
+function subRecordChanged(){
+  document.getElementById('sub-hours').value='';
+  document.getElementById('sub-preview').textContent='Introduce las horas a restar.';
+  document.getElementById('sub-preview').style.color='var(--muted2)';
+}
+
+function subUpdatePreview(){
+  var recId=parseInt(document.getElementById('sub-rec').value);
+  var subtract=parseFloat(document.getElementById('sub-hours').value);
+  var prev=document.getElementById('sub-preview');
+  var rec=db.records.find(function(r){return r.id===recId;});
+  if(!rec||isNaN(subtract)||subtract<=0){prev.textContent='Introduce las horas a restar.';prev.style.color='var(--muted2)';return;}
+  var currentH=durH(rec.startTime,rec.endTime);
+  var newH=currentH-subtract;
+  if(newH<=0){prev.textContent='No puedes restar más horas de las que tiene el registro ('+currentH.toFixed(1)+'h).';prev.style.color='#f87171';return;}
+  var start=new Date(rec.startTime);
+  var newEnd=new Date(start.getTime()+newH*3600000);
+  prev.textContent='Resultado: '+currentH.toFixed(1)+'h → '+newH.toFixed(1)+'h  ('+fmtTime(rec.startTime)+' → '+fmtTime(newEnd.toISOString())+')';
+  prev.style.color='var(--muted)';
+}
+
 function confirmHours(){
+  if(hoursMode==='sub'){
+    var recId=parseInt(document.getElementById('sub-rec').value);
+    var subtract=parseFloat(document.getElementById('sub-hours').value);
+    if(!recId){alert('Selecciona un registro.');return;}
+    if(isNaN(subtract)||subtract<=0){alert('Introduce las horas a restar.');return;}
+    var rec=db.records.find(function(r){return r.id===recId;});
+    if(!rec){alert('Registro no encontrado.');return;}
+    var currentH=durH(rec.startTime,rec.endTime);
+    var newH=currentH-subtract;
+    if(newH<=0){alert('No puedes restar más horas de las que tiene el registro ('+currentH.toFixed(1)+'h).');return;}
+    var start=new Date(rec.startTime);
+    rec.endTime=new Date(start.getTime()+newH*3600000).toISOString();
+    rec.manual=true;
+    document.getElementById('m-hours').classList.add('hidden');
+    persist();
+    if(selectedDay) renderDayPanel(selectedDay);
+    renderCalendar();
+    renderHistorial();
+    return;
+  }
   var empId=parseInt(document.getElementById('ah-emp').value);
   var ci=parseInt(document.getElementById('ah-cat').value);
   var si=parseInt(document.getElementById('ah-sub').value);
   var task=document.getElementById('ah-task').value;
   var dateVal=document.getElementById('ah-date').value;
+  var timeVal=document.getElementById('ah-time-start').value||'09:00';
   var hours=parseFloat(document.getElementById('ah-hours').value);
   if(!dateVal||isNaN(hours)||hours<=0){alert('Rellena todos los campos correctamente.');return;}
   var emp=db.employees.find(function(e){return e.id===empId;});
   var cat=db.categories[ci];
   var sub=cat?cat.subs[si]:null;
   if(!emp||!cat||!sub){alert('Selección inválida.');return;}
-  var start=new Date(dateVal+'T09:00:00');
+  var start=new Date(dateVal+'T'+timeVal+':00');
   var end=new Date(start.getTime()+hours*3600000);
-  db.records.push({id:Date.now(),employeeId:emp.id,employeeName:emp.name,categoryId:cat.id,categoryName:cat.name,categoryIcon:cat.icon||'',subId:sub.id,subName:sub.name,task:task,startTime:start.toISOString(),endTime:end.toISOString(),manual:true,negative:hoursMode==='sub'});
+  db.records.push({id:Date.now(),employeeId:emp.id,employeeName:emp.name,categoryId:cat.id,categoryName:cat.name,categoryIcon:cat.icon||'',subId:sub.id,subName:sub.name,task:task,startTime:start.toISOString(),endTime:end.toISOString(),manual:true,negative:false});
   document.getElementById('m-hours').classList.add('hidden');
   var savedDate=dateVal;
   persist();
-  // Refresh day panel if open
   if(selectedDay===savedDate) renderDayPanel(savedDate);
   renderCalendar();
+}
+
+// ── MODAL EDITAR REGISTRO ─────────────────────────────────────────
+var editingRecordId=null;
+function openEditRecordModal(recId){
+  var rec=null;
+  for(var i=0;i<db.records.length;i++){if(db.records[i].id===recId){rec=db.records[i];break;}}
+  if(!rec||!rec.endTime)return;
+  editingRecordId=recId;
+  var h=durH(rec.startTime,rec.endTime);
+  document.getElementById('mer-title').textContent='Editar — '+rec.employeeName;
+  document.getElementById('mer-info').textContent=rec.categoryName+' / '+rec.subName+' / '+rec.task+'  ·  '+fmtDate(rec.startTime)+' · '+fmtTime(rec.startTime)+' → '+fmtTime(rec.endTime);
+  document.getElementById('mer-hours').value=h.toFixed(2);
+  merUpdatePreview(rec);
+  document.getElementById('mer-hours').oninput=function(){merUpdatePreview(rec);};
+  document.getElementById('m-edit-record').classList.remove('hidden');
+}
+
+function merUpdatePreview(rec){
+  var h=parseFloat(document.getElementById('mer-hours').value);
+  if(isNaN(h)||h<=0){document.getElementById('mer-preview').textContent='';return;}
+  var start=new Date(rec.startTime);
+  var end=new Date(start.getTime()+h*3600000);
+  document.getElementById('mer-preview').textContent='Nuevo horario: '+fmtTime(start.toISOString())+' → '+fmtTime(end.toISOString())+'  ('+h.toFixed(1)+'h)';
+}
+
+function confirmEditRecord(){
+  var h=parseFloat(document.getElementById('mer-hours').value);
+  if(isNaN(h)||h<=0){alert('Introduce un número de horas válido.');return;}
+  for(var i=0;i<db.records.length;i++){
+    if(db.records[i].id===editingRecordId){
+      var start=new Date(db.records[i].startTime);
+      var end=new Date(start.getTime()+h*3600000);
+      db.records[i].endTime=end.toISOString();
+      db.records[i].manual=true;
+      break;
+    }
+  }
+  document.getElementById('m-edit-record').classList.add('hidden');
+  editingRecordId=null;
+  persist();
+  if(selectedDay) renderDayPanel(selectedDay);
+  renderCalendar();
+  renderHistorial();
 }
 
 // ── MODAL FICHAJE ─────────────────────────────────────────────────
@@ -834,21 +1011,23 @@ function renderHistorial(){
       +'</div>';
   }
   if(!recs.length){document.getElementById('hist-content').innerHTML='<div style="color:var(--muted);font-size:12px;letter-spacing:1px;padding:32px 0">Sin registros para los filtros seleccionados.</div>';return;}
-  var cols='1.5fr 2fr 1fr 80px';
+  var cols='1.5fr 2fr 1fr auto 60px';
   var rows=recs.map(function(r){
     var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'Activo';
     var durColor=r.negative?'#f87171':r.endTime?'var(--text)':'#4ade80';
     var tag='';
     if(r.manual&&!r.negative)tag='<span style="font-size:9px;color:var(--muted2);letter-spacing:1px;margin-left:6px">MANUAL</span>';
     if(r.negative)tag='<span style="font-size:9px;color:#f87171;letter-spacing:1px;margin-left:6px">− AJUSTE</span>';
+    var editBtn=r.endTime&&!r.negative?'<button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:5px 10px">Editar</button>':'<span></span>';
     return '<div class="tbl-row" style="grid-template-columns:'+cols+'">'
       +'<span style="font-size:13px">'+r.employeeName+tag+'</span>'
       +'<span style="font-size:12px;color:var(--muted)">'+r.categoryName+' / '+r.subName+' / '+r.task+'</span>'
       +'<span style="font-size:11px;color:var(--muted2)">'+fmtDate(r.startTime)+(r.endTime?' · '+fmtTime(r.startTime):' · en curso')+'</span>'
+      +editBtn
       +'<span style="font-size:13px;color:'+durColor+';text-align:right">'+(r.negative?'−':'')+dur+'</span>'
       +'</div>';
   }).join('');
-  document.getElementById('hist-content').innerHTML='<div class="tbl"><div class="tbl-head" style="grid-template-columns:'+cols+'"><span>Empleado</span><span>Actividad</span><span>Fecha</span><span style="text-align:right">Horas</span></div>'+rows+'</div>';
+  document.getElementById('hist-content').innerHTML='<div class="tbl"><div class="tbl-head" style="grid-template-columns:'+cols+'"><span>Empleado</span><span>Actividad</span><span>Fecha</span><span></span><span style="text-align:right">Horas</span></div>'+rows+'</div>';
 }
 
 function renderConfig(){

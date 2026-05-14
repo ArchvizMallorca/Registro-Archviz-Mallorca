@@ -501,7 +501,10 @@ function renderDayPanel(key){
       +'<div><div style="font-size:13px">'+r.employeeName+'</div>'
       +'<div class="day-record-info">'+r.categoryName+' / '+r.subName+' / '+r.task+'</div>'
       +'<div class="day-record-info">'+fmtTime(r.startTime)+' → '+fmtTime(r.endTime)+'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<button class="btn b-edit" onclick="openHoursModalForRecord(\''+key+'\','+r.employeeId+')" style="font-size:9px;letter-spacing:1px;padding:6px 10px;white-space:nowrap">± Ajustar</button>'
       +'<div class="day-record-hours" style="color:'+col+'">'+(r.negative?'−':'')+Math.abs(delta).toFixed(1)+'h</div>'
+      +'</div>'
       +'</div>';
   }).join(''):'<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros este día.</div>';
 
@@ -548,6 +551,18 @@ function saveNote(key){
 function openHoursModalForDay(dateStr){
   calHoursDate=dateStr;
   openHoursModal(dateStr);
+}
+
+function openHoursModalForRecord(dateStr,empId){
+  calHoursDate=dateStr;
+  openHoursModal(dateStr);
+  // Pre-select the employee
+  var empSel=document.getElementById('ah-emp');
+  if(empSel){
+    for(var i=0;i<empSel.options.length;i++){
+      if(parseInt(empSel.options[i].value)===empId){empSel.selectedIndex=i;break;}
+    }
+  }
 }
 
 // ── MODAL AJUSTAR HORAS ───────────────────────────────────────────

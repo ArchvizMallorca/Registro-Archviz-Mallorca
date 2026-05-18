@@ -722,7 +722,150 @@ function renderSemana(){
     var rows='';for(var k in breakdown){var v=breakdown[k];rows+='<div class="week-row"><span class="week-row-label">'+k+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
     html+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div><div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div><div class="week-goal">Objetivo: '+GOAL+'h — '+pct+'%</div><div class="week-prog"><div class="week-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin registros esta semana</div>')+'</div>';
   }
-  document.getElementById('semana-content').innerHTML=html+'</div>';
+  html+='</div>'+renderWeekExportSection();
+  document.getElementById('semana-content').innerHTML=html;
+}
+
+function getPastWeeks(){
+  var weeks={},curMon=getMonday().toISOString().slice(0,10);
+  for(var i=0;i<db.records.length;i++){
+    var d=new Date(db.records[i].startTime),day=d.getDay();
+    d.setDate(d.getDate()-(day===0?6:day-1));d.setHours(0,0,0,0);
+    var iso=d.toISOString().slice(0,10);
+    if(iso<curMon)weeks[iso]=true;
+  }
+  return Object.keys(weeks).sort(function(a,b){return b.localeCompare(a);});
+}
+
+function fmtWeekRange(mondayISO){
+  var mon=new Date(mondayISO+'T00:00:00'),sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  var ms=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  if(mon.getMonth()===sun.getMonth())return mon.getDate()+' – '+sun.getDate()+' '+ms[sun.getMonth()]+' '+sun.getFullYear();
+  return mon.getDate()+' '+ms[mon.getMonth()]+(mon.getFullYear()!==sun.getFullYear()?' '+mon.getFullYear():'')+' – '+sun.getDate()+' '+ms[sun.getMonth()]+' '+sun.getFullYear();
+}
+
+function renderWeekExportSection(){
+  var weeks=getPastWeeks();
+  var months=getPastMonths();
+  var weekBlock='',monthBlock='';
+  if(!weeks.length){weekBlock='<div style="font-size:12px;color:var(--muted);letter-spacing:1px">No hay semanas pasadas con registros aún.</div>';}
+  else{
+    var opts=weeks.map(function(w){return '<option value="'+w+'">'+fmtWeekRange(w)+'</option>';}).join('');
+    weekBlock='<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'
+      +'<select id="week-export-sel" class="sel" style="flex:1;max-width:360px;font-size:12px;padding:10px 4px">'+opts+'</select>'
+      +'<button class="btn b-save" onclick="exportWeekPDF(document.getElementById(\'week-export-sel\').value)" style="font-size:10px;letter-spacing:2px;padding:13px 24px">↓ Descargar PDF</button>'
+      +'</div>';
+  }
+  if(!months.length){monthBlock='<div style="font-size:12px;color:var(--muted);letter-spacing:1px">No hay meses pasados con registros aún.</div>';}
+  else{
+    var mopts=months.map(function(m){return '<option value="'+m+'">'+fmtMonthLabel(m)+'</option>';}).join('');
+    monthBlock='<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'
+      +'<select id="month-export-sel" class="sel" style="flex:1;max-width:360px;font-size:12px;padding:10px 4px">'+mopts+'</select>'
+      +'<button class="btn b-save" onclick="exportMonthPDF(document.getElementById(\'month-export-sel\').value)" style="font-size:10px;letter-spacing:2px;padding:13px 24px">↓ Descargar PDF</button>'
+      +'</div>';
+  }
+  return '<div style="margin-top:40px;border-top:1px solid var(--border);padding-top:32px">'
+    +'<div class="section-title" style="margin-bottom:4px">Informe semanal</div>'
+    +'<div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">Selecciona una semana pasada y descarga el informe PDF por empleado</div>'
+    +weekBlock
+    +'</div>'
+    +'<div style="margin-top:40px;border-top:1px solid var(--border);padding-top:32px">'
+    +'<div class="section-title" style="margin-bottom:4px">Informe mensual</div>'
+    +'<div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">Selecciona un mes y descarga el informe PDF por empleado</div>'
+    +monthBlock
+    +'</div>';
+}
+
+function getPastMonths(){
+  var months={},now=new Date();
+  var curKey=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  for(var i=0;i<db.records.length;i++){
+    var d=new Date(db.records[i].startTime);
+    var key=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0');
+    if(key<curKey)months[key]=true;
+  }
+  return Object.keys(months).sort(function(a,b){return b.localeCompare(a);});
+}
+
+function fmtMonthLabel(ym){
+  var p=ym.split('-');
+  var ms=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return ms[parseInt(p[1])-1]+' '+p[0];
+}
+
+function exportMonthPDF(ym){
+  if(!ym){alert('Selecciona un mes.');return;}
+  var p=ym.split('-'),y=parseInt(p[0]),m=parseInt(p[1])-1;
+  var from=new Date(y,m,1,0,0,0,0),to=new Date(y,m+1,0,23,59,59,999);
+  var monthRecs=db.records.filter(function(r){var d=new Date(r.startTime);return r.endTime&&d>=from&&d<=to;});
+  buildPeriodPDF(monthRecs,fmtMonthLabel(ym));
+}
+
+function exportWeekPDF(mondayISO){
+  if(!mondayISO){alert('Selecciona una semana.');return;}
+  var mon=new Date(mondayISO+'T00:00:00'),sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);
+  var weekRecs=db.records.filter(function(r){var d=new Date(r.startTime);return r.endTime&&d>=mon&&d<=sun;});
+  buildPeriodPDF(weekRecs,'Semana '+fmtWeekRange(mondayISO));
+}
+
+function buildPeriodPDF(recs,periodLabel){
+  var empSections='',hasAny=false;
+  for(var i=0;i<db.employees.length;i++){
+    var emp=db.employees[i];
+    var erecs=recs.filter(function(r){return r.employeeId===emp.id;});
+    if(!erecs.length)continue;
+    hasAny=true;
+    var total=0;
+    erecs.forEach(function(r){var h=durH(r.startTime,r.endTime);total+=r.negative?-h:h;});
+    total=Math.max(0,total);
+    var bycat={};
+    erecs.forEach(function(r){
+      var k=r.categoryName;
+      if(!bycat[k])bycat[k]={name:k,rows:[],total:0};
+      var h=durH(r.startTime,r.endTime)*(r.negative?-1:1);
+      bycat[k].rows.push({sub:r.subName,task:r.task,date:r.startTime,dateStr:fmtDate(r.startTime),from:fmtTime(r.startTime),to:fmtTime(r.endTime),h:h,neg:r.negative});
+      bycat[k].total+=h;
+    });
+    var catHTML='';
+    for(var ck in bycat){
+      var cat=bycat[ck];
+      cat.rows.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+      var rowsHTML=cat.rows.map(function(row){
+        return '<tr><td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#666;white-space:nowrap">'+row.dateStr+'</td>'
+          +'<td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:12px">'+row.sub+' / '+row.task+'</td>'
+          +'<td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#888;white-space:nowrap">'+row.from+' → '+row.to+'</td>'
+          +'<td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:right;font-weight:500;white-space:nowrap;color:'+(row.neg?'#c53030':'#111')+'">'+(row.neg?'−':'')+Math.abs(row.h).toFixed(1)+'h</td></tr>';
+      }).join('');
+      catHTML+='<div style="margin-bottom:24px">'
+        +'<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#f5f5f5;border-top:2px solid #ddd;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#555">'
+        +'<span>'+cat.name+'</span><span>'+cat.total.toFixed(1)+'h</span></div>'
+        +'<table style="width:100%;border-collapse:collapse"><tbody>'+rowsHTML+'</tbody></table></div>';
+    }
+    var pct=Math.min(100,Math.round(total/GOAL*100));
+    var barColor=total>=GOAL?'#38a169':total>=20?'#d69e2e':'#aaa';
+    empSections+='<div style="margin-bottom:52px;page-break-inside:avoid">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:2px solid #111;margin-bottom:16px">'
+      +'<div><span style="font-size:20px;font-weight:600;letter-spacing:1px">'+emp.name+'</span>'
+      +'<span style="font-size:12px;color:#888;margin-left:10px;text-transform:uppercase;letter-spacing:1px">'+emp.role+'</span></div>'
+      +'<div style="font-size:32px;font-weight:300">'+total.toFixed(1)+'<span style="font-size:14px;color:#888;margin-left:2px">h</span></div></div>'
+      +'<div style="height:6px;background:#eee;border-radius:3px;margin-bottom:6px"><div style="height:6px;width:'+pct+'%;background:'+barColor+';border-radius:3px"></div></div>'
+      +'<div style="font-size:11px;color:#aaa;margin-bottom:24px;letter-spacing:1px">'+pct+'% del objetivo semanal ('+GOAL+'h)</div>'
+      +catHTML+'</div>';
+  }
+  if(!hasAny){alert('No hay registros para ese período.');return;}
+  var win=window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+periodLabel+' — Archviz Mallorca</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">'
+    +'<style>*{box-sizing:border-box}body{font-family:Inter,sans-serif;padding:56px;color:#111;background:#fff;max-width:900px;margin:0 auto}'
+    +'@media print{.no-print{display:none!important}body{padding:24px}}</style></head><body>'
+    +'<div class="no-print" style="margin-bottom:40px;display:flex;gap:12px">'
+    +'<button onclick="window.print()" style="padding:13px 28px;background:#111;color:#fff;border:none;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / Guardar PDF</button>'
+    +'<button onclick="window.close()" style="padding:13px 24px;background:transparent;border:1px solid #ccc;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#555">Cerrar</button></div>'
+    +'<div style="margin-bottom:48px">'
+    +'<div style="font-size:11px;color:#aaa;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">Archviz Mallorca</div>'
+    +'<div style="font-size:30px;font-weight:300;margin-bottom:4px">'+periodLabel+'</div></div>'
+    +empSections+'</body></html>');
+  win.document.close();
 }
 
 function renderProyectos(){
@@ -825,8 +968,8 @@ function delSub(catId,subId){if(!confirm('¿Eliminar subcategoría?'))return;cfg
 function addSub(catId){var name=document.getElementById('ns-name').value.trim(),tasks=document.getElementById('ns-tasks').value.split('\n').map(function(t){return t.trim();}).filter(Boolean);if(!name)return;cfgState={};for(var i=0;i<db.categories.length;i++){if(db.categories[i].id===catId){db.categories[i].subs.push({id:'s'+Date.now(),name:name,tasks:tasks});break;}}persist();}
 function delVac(idx){if(!confirm('¿Eliminar estas vacaciones?'))return;cfgState={};db.vacations.splice(idx,1);render();persist();}
 
-function exportCSV(){var recs=db.records.slice().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var hdr='Empleado,Categoría,Subcategoría,Tarea,Fecha,Entrada,Salida,Horas,Tipo\n',body=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(2):'';var tipo=r.negative?'Ajuste negativo':r.manual?'Manual':'Fichaje';return '"'+r.employeeName+'","'+r.categoryName+'","'+r.subName+'","'+r.task+'","'+fmtDate(r.startTime)+'","'+fmtTime(r.startTime)+'","'+(r.endTime?fmtTime(r.endTime):'activo')+'","'+dur+'","'+tipo+'"';}).join('\n');var blob=new Blob(['\uFEFF'+hdr+body],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fichajes_'+today().replace(/\//g,'-')+'.csv';a.click();}
-function exportPDF(){var recs=db.records.slice().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var win=window.open('','_blank'),rows=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'activo';return '<tr><td>'+r.employeeName+'</td><td>'+r.categoryName+' / '+r.subName+'</td><td>'+r.task+'</td><td>'+fmtDate(r.startTime)+' '+fmtTime(r.startTime)+'</td><td>'+(r.endTime?fmtTime(r.endTime):'—')+'</td><td>'+(r.negative?'−':'')+dur+'</td></tr>';}).join('');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial</title><style>body{font-family:Inter,sans-serif;padding:40px;color:#111;background:#fff}h1{font-size:24px;font-weight:300;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:32px}table{width:100%;border-collapse:collapse;font-size:13px}th{border-bottom:1px solid #111;padding:10px 0;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:400}td{padding:12px 0;border-bottom:1px solid #eee}@media print{button{display:none}}</style></head><body><h1>Fichaje — Archviz Mallorca</h1><p>'+today()+' · '+recs.length+' registros</p><table><thead><tr><th>Empleado</th><th>Área</th><th>Tarea</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>'+rows+'</tbody></table><br><button onclick="window.print()" style="margin-top:24px;padding:12px 24px;border:1px solid #111;background:transparent;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / PDF</button></body></html>');win.document.close();}
+function exportCSV(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var hdr='Empleado,Categoría,Subcategoría,Tarea,Fecha,Entrada,Salida,Horas,Tipo\n',body=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(2):'';var tipo=r.negative?'Ajuste negativo':r.manual?'Manual':'Fichaje';return '"'+r.employeeName+'","'+r.categoryName+'","'+r.subName+'","'+r.task+'","'+fmtDate(r.startTime)+'","'+fmtTime(r.startTime)+'","'+(r.endTime?fmtTime(r.endTime):'activo')+'","'+dur+'","'+tipo+'"';}).join('\n');var blob=new Blob(['\uFEFF'+hdr+body],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fichajes_'+today().replace(/\//g,'-')+'.csv';a.click();}
+function exportPDF(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var win=window.open('','_blank'),rows=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'activo';return '<tr><td>'+r.employeeName+'</td><td>'+r.categoryName+' / '+r.subName+'</td><td>'+r.task+'</td><td>'+fmtDate(r.startTime)+' '+fmtTime(r.startTime)+'</td><td>'+(r.endTime?fmtTime(r.endTime):'—')+'</td><td>'+(r.negative?'−':'')+dur+'</td></tr>';}).join('');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial</title><style>body{font-family:Inter,sans-serif;padding:40px;color:#111;background:#fff}h1{font-size:24px;font-weight:300;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:32px}table{width:100%;border-collapse:collapse;font-size:13px}th{border-bottom:1px solid #111;padding:10px 0;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:400}td{padding:12px 0;border-bottom:1px solid #eee}@media print{button{display:none}}</style></head><body><h1>Fichaje — Archviz Mallorca</h1><p>'+today()+' · '+recs.length+' registros</p><table><thead><tr><th>Empleado</th><th>Área</th><th>Tarea</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>'+rows+'</tbody></table><br><button onclick="window.print()" style="margin-top:24px;padding:12px 24px;border:1px solid #111;background:transparent;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / PDF</button></body></html>');win.document.close();}
 
 initFirebase();
 </script>

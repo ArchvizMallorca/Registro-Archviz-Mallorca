@@ -152,6 +152,19 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .day-panel-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px}
 .day-panel-date{font-size:20px;font-weight:300;letter-spacing:-0.3px}
 .day-panel-total{font-size:32px;font-weight:300;color:var(--text)}
+.dp-title-wrap{position:relative;display:inline-block}
+.dp-title-btn{font-size:20px;font-weight:300;letter-spacing:-0.3px;background:transparent;border:none;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;padding:0;display:flex;align-items:center;gap:8px;line-height:1.2}
+.dp-chevron{font-size:10px;color:var(--muted2);transition:transform .2s;display:inline-block;margin-top:3px}
+.dp-chevron.open{transform:rotate(180deg)}
+.dp-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border2);min-width:220px;z-index:50;display:none}
+.dp-dropdown.open{display:block}
+.dp-option{padding:12px 16px;font-size:12px;font-weight:300;color:var(--muted);cursor:pointer;letter-spacing:0.5px;transition:all .15s;border-bottom:1px solid var(--border)}
+.dp-option:last-child{border-bottom:none}
+.dp-option:hover{background:var(--bg3);color:var(--text)}
+.dp-option.dp-active{color:var(--text);font-weight:400}
+.cpt{display:flex;gap:1px;background:var(--border);margin-bottom:20px}
+.cpt-btn{flex:1;padding:10px;border:none;background:var(--bg2);color:var(--muted);font-family:'Inter',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent}
+.cpt-btn.active{color:var(--text);border-bottom:2px solid var(--text);background:var(--bg3)}
 .day-records{display:flex;flex-direction:column;gap:1px;background:var(--border);margin-bottom:20px}
 .day-record{background:var(--bg);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .day-record-info{font-size:12px;color:var(--muted)}
@@ -187,7 +200,6 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
     </div>
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('fichaje')">Registro</button>
-      <button class="tab-btn" onclick="switchTab('semana')">Semana</button>
       <button class="tab-btn" onclick="switchTab('proyectos')">Proyectos</button>
       <button class="tab-btn" onclick="switchTab('historial')">Historial</button>
       <button class="tab-btn" onclick="switchTab('config')">Config</button>
@@ -201,7 +213,6 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
       </div>
       <div class="grid" id="grid"></div>
     </div>
-    <div id="tab-semana" class="hidden"><div id="semana-content"></div></div>
     <div id="tab-proyectos" class="hidden"><div id="proyectos-content"></div></div>
     <div id="tab-historial" class="hidden">
       <div style="margin-bottom:24px">
@@ -209,14 +220,14 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
       </div>
       <div id="calendar-wrap"></div>
       <div id="day-panel" class="hidden"></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:32px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:0">
         <div style="background:var(--bg);padding:16px 20px">
           <div class="lbl">Empleado</div>
           <select id="f-emp" onchange="renderHistorial()" class="sel" style="font-size:12px;padding:4px 0"></select>
         </div>
         <div style="background:var(--bg);padding:16px 20px">
           <div class="lbl">Período</div>
-          <select id="f-period" onchange="renderHistorial()" class="sel" style="font-size:12px;padding:4px 0">
+          <select id="f-period" onchange="onFPeriodChange()" class="sel" style="font-size:12px;padding:4px 0">
             <option value="all">Todo</option><option value="week">Esta semana</option>
             <option value="month">Este mes</option><option value="custom">Personalizado</option>
           </select>
@@ -225,15 +236,28 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
           <div class="lbl">Categoría</div>
           <select id="f-cat" onchange="renderHistorial()" class="sel" style="font-size:12px;padding:4px 0"></select>
         </div>
-        <div style="background:var(--bg);padding:16px 20px" id="f-custom-wrap">
-          <div class="lbl">Desde — Hasta</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input id="f-from" type="date" style="flex:1;font-size:11px;color-scheme:dark" onchange="renderHistorial()"/>
-            <span style="color:var(--muted2)">—</span>
-            <input id="f-to" type="date" style="flex:1;font-size:11px;color-scheme:dark" onchange="renderHistorial()"/>
+      </div>
+      <!-- Custom period picker -->
+      <div id="f-custom-wrap" style="display:none;border:1px solid var(--border);border-top:none;margin-bottom:32px">
+        <div class="cpt" id="cpt-tabs">
+          <button class="cpt-btn active" id="cpt-week-btn" onclick="setCPT('week')">Por semana</button>
+          <button class="cpt-btn" id="cpt-month-btn" onclick="setCPT('month')">Por mes</button>
+        </div>
+        <div id="cpt-week-panel" style="padding:16px 20px">
+          <div class="lbl" style="margin-bottom:8px">Selecciona semana</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <select id="cpt-week-sel" onchange="renderHistorial()" class="sel" style="flex:1;max-width:360px;font-size:12px;padding:6px 0"></select>
+          </div>
+        </div>
+        <div id="cpt-month-panel" style="padding:16px 20px;display:none">
+          <div class="lbl" style="margin-bottom:8px">Selecciona mes</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <select id="cpt-month-sel" onchange="renderHistorial()" class="sel" style="flex:1;max-width:360px;font-size:12px;padding:6px 0"></select>
           </div>
         </div>
       </div>
+      <div id="f-custom-spacer" style="display:none;height:0;margin-bottom:32px"></div>
+      <div id="f-normal-spacer" style="margin-bottom:32px"></div>
       <div id="hist-summary" style="margin-bottom:16px"></div>
       <div id="hist-content"></div>
     </div>
@@ -433,7 +457,7 @@ function setStatus(s){
 
 function switchTab(name){
   currentTab=name;cfgState={};
-  var tabs=['fichaje','semana','proyectos','historial','config'];
+  var tabs=['fichaje','proyectos','historial','config'];
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',tabs[i]===name);});
   tabs.forEach(function(t){document.getElementById('tab-'+t).classList.toggle('hidden',t!==name);});
   render();
@@ -517,51 +541,172 @@ function renderCalendar(){
 function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
 function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
 
-function selectDay(key){selectedDay=key;editingNote=false;renderCalendar();renderDayPanel(key);}
+var dayPanelMode='day';
+var dayPanelWeekSel=null;
+var dayPanelMonthSel=null;
+
+function selectDay(key){selectedDay=key;editingNote=false;dayPanelMode='day';dayPanelWeekSel=null;dayPanelMonthSel=null;renderCalendar();renderDayPanel(key);}
+
+function toggleDpDropdown(){
+  var dd=document.getElementById('dp-dd');var ch=document.getElementById('dp-ch');
+  if(!dd)return;
+  var isOpen=dd.classList.contains('open');
+  dd.classList.toggle('open',!isOpen);
+  ch.classList.toggle('open',!isOpen);
+}
+function setDpMode(mode){
+  dayPanelMode=mode;editingNote=false;
+  if(mode==='week'){var weeks=getAllWeeksWithRecords();dayPanelWeekSel=weeks.length?weeks[0]:null;}
+  if(mode==='month'){var months=getAllMonthsWithRecords();dayPanelMonthSel=months.length?months[0]:null;}
+  renderDayPanel(selectedDay);
+}
+function onDayPanelWeekChange(){
+  var sel=document.getElementById('dp-week-sel');if(sel)dayPanelWeekSel=sel.value;
+  renderDayPanel(selectedDay);
+}
+function onDayPanelMonthChange(){
+  var sel=document.getElementById('dp-month-sel');if(sel)dayPanelMonthSel=sel.value;
+  renderDayPanel(selectedDay);
+}
+
+function getAllWeeksWithRecords(){
+  var weeks={};
+  db.records.forEach(function(r){
+    if(!r.endTime)return;
+    var d=new Date(r.startTime),day=d.getDay();
+    d.setDate(d.getDate()-(day===0?6:day-1));d.setHours(0,0,0,0);
+    var iso=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+    weeks[iso]=true;
+  });
+  return Object.keys(weeks).sort(function(a,b){return b.localeCompare(a);});
+}
+
+function getAllMonthsWithRecords(){
+  var months={};
+  db.records.forEach(function(r){
+    if(!r.endTime)return;
+    var d=new Date(r.startTime);
+    var key=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0');
+    months[key]=true;
+  });
+  return Object.keys(months).sort(function(a,b){return b.localeCompare(a);});
+}
+
+function getRecsForWeek(mondayISO){
+  var p=mondayISO.split('-'),mon=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]),0,0,0,0),sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);
+  return db.records.filter(function(r){var rd=new Date(r.startTime);return r.endTime&&rd>=mon&&rd<=sun;});
+}
+
+function getRecsForMonth(ym){
+  var p=ym.split('-'),y=parseInt(p[0]),m=parseInt(p[1])-1;
+  var from=new Date(y,m,1,0,0,0,0),to=new Date(y,m+1,0,23,59,59,999);
+  return db.records.filter(function(r){var rd=new Date(r.startTime);return r.endTime&&rd>=from&&rd<=to;});
+}
+
+function renderWeekCards(recs){
+  var html='<div class="week-grid">';
+  for(var i=0;i<db.employees.length;i++){
+    var emp=db.employees[i];
+    var erecs=recs.filter(function(r){return r.employeeId===emp.id;});
+    var wh=0;erecs.forEach(function(r){var h=durH(r.startTime,r.endTime);wh+=r.negative?-h:h;});wh=Math.max(0,wh);
+    if(wh===0&&!erecs.length)continue;
+    var pct=Math.min(100,Math.round(wh/GOAL*100));var cls=wh>=GOAL?'ok':wh>=20?'warn':'low';var fc=cls==='ok'?'#4ade80':cls==='warn'?'#fbbf24':'#555';
+    var breakdown={};
+    erecs.forEach(function(r){var k=r.categoryName+' / '+r.subName+' / '+r.task;var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);});
+    var rows='';for(var k in breakdown){var v=breakdown[k];rows+='<div class="week-row"><span class="week-row-label">'+k+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
+    html+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div><div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div><div class="week-goal">Objetivo: '+GOAL+'h — '+pct+'%</div><div class="week-prog"><div class="week-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin registros</div>')+'</div>';
+  }
+  return html+'</div>';
+}
 
 function renderDayPanel(key){
   var panel=document.getElementById('day-panel');if(!panel)return;
   panel.classList.remove('hidden');
-  var recs=db.records.filter(function(r){return r.startTime.slice(0,10)===key&&r.endTime;});
-  var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
-  var note=db.notes&&db.notes[key]?db.notes[key]:'';
-  var vacs=vacationsOnDay(key);
+  var mode=dayPanelMode||'day';
 
-  var recRows=recs.length?recs.map(function(r){
-    var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;var col=r.negative?'#f87171':'var(--text)';
-    return '<div class="day-record"><div><div style="font-size:13px">'+r.employeeName+'</div><div class="day-record-info">'+r.categoryName+' / '+r.subName+' / '+r.task+'</div><div class="day-record-info">'+fmtTime(r.startTime)+' → '+fmtTime(r.endTime)+'</div></div>'
-      +'<div style="display:flex;align-items:center;gap:10px"><button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:6px 10px;white-space:nowrap">Editar</button>'
-      +'<div class="day-record-hours" style="color:'+col+'">'+(r.negative?'−':'')+Math.abs(delta).toFixed(1)+'h</div></div></div>';
-  }).join(''):'<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros este día.</div>';
+  // Build the styled custom title dropdown
+  var modeLabels={day:'Detalle del día',week:'Detalle de la semana',month:'Detalle del mes'};
+  var titleSel='<div class="dp-title-wrap">'
+    +'<button class="dp-title-btn" onclick="toggleDpDropdown()" id="dp-btn">'+modeLabels[mode]+'<span class="dp-chevron" id="dp-ch">▾</span></button>'
+    +'<div class="dp-dropdown" id="dp-dd">'
+    +['day','week','month'].map(function(m){return '<div class="dp-option'+(mode===m?' dp-active':'')+' " onclick="setDpMode(&quot;'+m+'&quot;)">'+modeLabels[m]+'</div>';}).join('')
+    +'</div></div>';
 
-  // Vacaciones section
-  var vacSection='';
-  if(vacs.length){
-    vacSection='<div style="border-top:1px solid var(--border);padding-top:20px;margin-bottom:20px">'
-      +'<div class="day-note-label">⛱ De vacaciones</div>'
-      +'<div style="display:flex;flex-direction:column;gap:1px;background:var(--border)">'
-      +vacs.map(function(v){
-        return '<div class="vac-item"><span style="font-size:18px">⛱</span>'
-          +'<span style="font-size:13px">'+v.employeeName+'</span>'
-          +'<span style="font-size:11px;color:var(--muted);margin-left:auto">De vacaciones</span></div>';
-      }).join('')
-      +'</div></div>';
+  if(mode==='day'){
+    var recs=db.records.filter(function(r){return r.startTime.slice(0,10)===key&&r.endTime;});
+    var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
+    var note=db.notes&&db.notes[key]?db.notes[key]:'';
+    var vacs=vacationsOnDay(key);
+
+    var recRows=recs.length?recs.map(function(r){
+      var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;var col=r.negative?'#f87171':'var(--text)';
+      return '<div class="day-record"><div><div style="font-size:13px">'+r.employeeName+'</div><div class="day-record-info">'+r.categoryName+' / '+r.subName+' / '+r.task+'</div><div class="day-record-info">'+fmtTime(r.startTime)+' → '+fmtTime(r.endTime)+'</div></div>'
+        +'<div style="display:flex;align-items:center;gap:10px"><button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:6px 10px;white-space:nowrap">Editar</button>'
+        +'<div class="day-record-hours" style="color:'+col+'">'+(r.negative?'−':'')+Math.abs(delta).toFixed(1)+'h</div></div></div>';
+    }).join(''):'<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros este día.</div>';
+
+    var vacSection='';
+    if(vacs.length){
+      vacSection='<div style="border-top:1px solid var(--border);padding-top:20px;margin-bottom:20px">'
+        +'<div class="day-note-label">⛱ De vacaciones</div>'
+        +'<div style="display:flex;flex-direction:column;gap:1px;background:var(--border)">'
+        +vacs.map(function(v){return '<div class="vac-item"><span style="font-size:18px">⛱</span><span style="font-size:13px">'+v.employeeName+'</span><span style="font-size:11px;color:var(--muted);margin-left:auto">De vacaciones</span></div>';}).join('')
+        +'</div></div>';
+    }
+
+    var noteSection='<div class="day-note-area"><div class="day-note-label">Notas</div>';
+    if(editingNote){
+      noteSection+='<textarea id="note-edit" class="day-note-edit">'+note.replace(/</g,'&lt;')+'</textarea><div style="display:flex;gap:8px;margin-top:12px"><button class="btn b-save" onclick="saveNote(\''+key+'\')">Guardar nota</button><button class="btn b-cancel" onclick="editingNote=false;renderDayPanel(\''+key+'\')">Cancelar</button></div>';
+    }else{
+      noteSection+=(note?'<div class="day-note-text">'+note.replace(/</g,'&lt;')+'</div>':'<div style="font-size:12px;color:var(--muted2)">Sin notas.</div>')
+        +'<button class="btn b-edit" style="margin-top:12px" onclick="editingNote=true;renderDayPanel(\''+key+'\')">'+(note?'Editar nota':'+ Añadir nota')+'</button>';
+    }
+    noteSection+='</div>';
+
+    panel.innerHTML='<div class="day-panel">'
+      +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+isoToDisplay(key)+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Total</div><div class="day-panel-total">'+totalH.toFixed(1)+'h</div></div></div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:16px"><button class="btn b-edit" onclick="openHoursModalForDay(\''+key+'\')">+ Añadir horas</button></div>'
+      +vacSection+'<div class="day-records">'+recRows+'</div>'+noteSection+'</div>';
+
+  } else if(mode==='week'){
+    var weeks=getAllWeeksWithRecords();
+    var selWeek=dayPanelWeekSel||(weeks.length?weeks[0]:null);
+    var weekSelHtml='';
+    if(weeks.length){
+      weekSelHtml='<div style="margin-bottom:24px"><div class="lbl" style="margin-bottom:8px">Semana</div>'
+        +'<select id="dp-week-sel" onchange="onDayPanelWeekChange()" class="sel" style="font-size:12px;padding:6px 0;max-width:360px">'
+        +weeks.map(function(w){return '<option value="'+w+'"'+(w===selWeek?' selected':'')+'>'+fmtWeekRange(w)+'</option>';}).join('')
+        +'</select></div>';
+    }
+    var recs=selWeek?getRecsForWeek(selWeek):[];
+    var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
+    var cardsHtml=recs.length?renderWeekCards(recs):'<div style="padding:16px;font-size:12px;color:var(--muted2)">'+(weeks.length?'Sin registros para esta semana.':'No hay semanas con registros aún.')+'</div>';
+
+    panel.innerHTML='<div class="day-panel">'
+      +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selWeek?fmtWeekRange(selWeek):'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Total semana</div><div class="day-panel-total">'+totalH.toFixed(1)+'h</div></div></div>'
+      +weekSelHtml+cardsHtml+'</div>';
+
+  } else if(mode==='month'){
+    var months=getAllMonthsWithRecords();
+    var selMonth=dayPanelMonthSel||(months.length?months[0]:null);
+    var monthSelHtml='';
+    if(months.length){
+      monthSelHtml='<div style="margin-bottom:24px"><div class="lbl" style="margin-bottom:8px">Mes</div>'
+        +'<select id="dp-month-sel" onchange="onDayPanelMonthChange()" class="sel" style="font-size:12px;padding:6px 0;max-width:360px">'
+        +months.map(function(m){return '<option value="'+m+'"'+(m===selMonth?' selected':'')+'>'+fmtMonthLabel(m)+'</option>';}).join('')
+        +'</select></div>';
+    }
+    var recs=selMonth?getRecsForMonth(selMonth):[];
+    var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
+    var cardsHtml=recs.length?renderWeekCards(recs):'<div style="padding:16px;font-size:12px;color:var(--muted2)">'+(months.length?'Sin registros para este mes.':'No hay meses con registros aún.')+'</div>';
+
+    panel.innerHTML='<div class="day-panel">'
+      +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selMonth?fmtMonthLabel(selMonth):'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Total mes</div><div class="day-panel-total">'+totalH.toFixed(1)+'h</div></div></div>'
+      +monthSelHtml+cardsHtml+'</div>';
   }
-
-  var noteSection='<div class="day-note-area"><div class="day-note-label">Notas</div>';
-  if(editingNote){
-    noteSection+='<textarea id="note-edit" class="day-note-edit">'+note.replace(/</g,'&lt;')+'</textarea><div style="display:flex;gap:8px;margin-top:12px"><button class="btn b-save" onclick="saveNote(\''+key+'\')">Guardar nota</button><button class="btn b-cancel" onclick="editingNote=false;renderDayPanel(\''+key+'\')">Cancelar</button></div>';
-  }else{
-    noteSection+=(note?'<div class="day-note-text">'+note.replace(/</g,'&lt;')+'</div>':'<div style="font-size:12px;color:var(--muted2)">Sin notas.</div>')
-      +'<button class="btn b-edit" style="margin-top:12px" onclick="editingNote=true;renderDayPanel(\''+key+'\')">'+(note?'Editar nota':'+ Añadir nota')+'</button>';
-  }
-  noteSection+='</div>';
-
-  panel.innerHTML='<div class="day-panel"><div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+isoToDisplay(key)+'</div><div class="day-panel-date">Detalle del día</div></div><div style="text-align:right"><div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Total</div><div class="day-panel-total">'+totalH.toFixed(1)+'h</div></div></div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:16px"><button class="btn b-edit" onclick="openHoursModalForDay(\''+key+'\')">+ Añadir horas</button></div>'
-    +vacSection
-    +'<div class="day-records">'+recRows+'</div>'
-    +noteSection+'</div>';
 }
 
 function saveNote(key){var ta=document.getElementById('note-edit');if(!ta)return;if(!db.notes)db.notes={};db.notes[key]=ta.value;editingNote=false;persist();renderCalendar();renderDayPanel(key);}
@@ -691,7 +836,6 @@ function registrarSalida(empId){for(var i=0;i<db.records.length;i++)if(db.record
 function render(fromFirebase){
   var el=document.getElementById('sub-date');if(el)el.textContent=today();
   if(currentTab==='fichaje') renderFichaje();
-  else if(currentTab==='semana') renderSemana();
   else if(currentTab==='proyectos') renderProyectos();
   else if(currentTab==='historial'){renderCalendar();if(selectedDay)renderDayPanel(selectedDay);renderHistorial();}
   else if(currentTab==='config'){if(fromFirebase&&Object.keys(cfgState).length>0)return;renderConfig();}
@@ -884,21 +1028,81 @@ function renderProyectos(){
   document.getElementById('proyectos-content').innerHTML=html||'<div style="color:var(--muted);font-size:12px;letter-spacing:1px">Sin categorías.</div>';
 }
 
+var cptMode='week'; // 'week' or 'month'
+
+function onFPeriodChange(){
+  var period=document.getElementById('f-period')?document.getElementById('f-period').value:'all';
+  var cw=document.getElementById('f-custom-wrap');
+  var ns=document.getElementById('f-normal-spacer');
+  if(cw)cw.style.display=period==='custom'?'block':'none';
+  if(ns)ns.style.display=period==='custom'?'none':'block';
+  if(period==='custom') populateCPTSelectors();
+  renderHistorial();
+}
+
+function setCPT(mode){
+  cptMode=mode;
+  document.getElementById('cpt-week-btn').classList.toggle('active',mode==='week');
+  document.getElementById('cpt-month-btn').classList.toggle('active',mode==='month');
+  document.getElementById('cpt-week-panel').style.display=mode==='week'?'block':'none';
+  document.getElementById('cpt-month-panel').style.display=mode==='month'?'block':'none';
+  renderHistorial();
+}
+
+function populateCPTSelectors(){
+  var weeks=getAllWeeksWithRecords();
+  var wsel=document.getElementById('cpt-week-sel');
+  if(wsel&&wsel.options.length===0){
+    wsel.innerHTML=weeks.length
+      ?weeks.map(function(w){return '<option value="'+w+'">'+fmtWeekRange(w)+'</option>';}).join('')
+      :'<option value="">Sin semanas con registros</option>';
+  }
+  var months=getAllMonthsWithRecords();
+  var msel=document.getElementById('cpt-month-sel');
+  if(msel&&msel.options.length===0){
+    msel.innerHTML=months.length
+      ?months.map(function(m){return '<option value="'+m+'">'+fmtMonthLabel(m)+'</option>';}).join('')
+      :'<option value="">Sin meses con registros</option>';
+  }
+}
+
+function getCPTRange(){
+  if(cptMode==='week'){
+    var wsel=document.getElementById('cpt-week-sel');if(!wsel||!wsel.value)return null;
+    var p=wsel.value.split('-'),mon=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]),0,0,0,0),sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);
+    return{from:mon,to:sun,label:'Semana '+fmtWeekRange(wsel.value)};
+  } else {
+    var msel=document.getElementById('cpt-month-sel');if(!msel||!msel.value)return null;
+    var p=msel.value.split('-'),y=parseInt(p[0]),m=parseInt(p[1])-1;
+    var from=new Date(y,m,1,0,0,0,0),to=new Date(y,m+1,0,23,59,59,999);
+    return{from:from,to:to,label:fmtMonthLabel(msel.value)};
+  }
+}
+
+function smartExportPDF(){
+  var period=document.getElementById('f-period')?document.getElementById('f-period').value:'all';
+  if(period==='custom'){exportCustomPDF();}else{exportPDF();}
+}
+
+function exportCustomPDF(){
+  var range=getCPTRange();if(!range){alert('Selecciona un período.');return;}
+  var recs=db.records.filter(function(r){var rd=new Date(r.startTime);return r.endTime&&rd>=range.from&&rd<=range.to;});
+  buildPeriodPDF(recs,range.label);
+}
+
 function initHistorialFilters(){
   var empSel=document.getElementById('f-emp');if(!empSel)return;
   empSel.innerHTML='<option value="all">Todos</option>'+db.employees.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('');
   document.getElementById('f-cat').innerHTML='<option value="all">Todas</option>'+db.categories.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
-  var now=new Date(),mon=getMonday();document.getElementById('f-from').value=mon.toISOString().slice(0,10);document.getElementById('f-to').value=now.toISOString().slice(0,10);
 }
+
 function getHistFilters(){
   var empId=document.getElementById('f-emp')?document.getElementById('f-emp').value:'all';
   var period=document.getElementById('f-period')?document.getElementById('f-period').value:'all';
   var catId=document.getElementById('f-cat')?document.getElementById('f-cat').value:'all';
-  var from=document.getElementById('f-from')?document.getElementById('f-from').value:'';
-  var to=document.getElementById('f-to')?document.getElementById('f-to').value:'';
-  var cw=document.getElementById('f-custom-wrap');if(cw)cw.style.display=period==='custom'?'block':'none';
-  return{empId:empId,period:period,catId:catId,from:from,to:to};
+  return{empId:empId,period:period,catId:catId};
 }
+
 function filterRecords(){
   var f=getHistFilters();var now=new Date(),mon=getMonday(),fom=new Date(now.getFullYear(),now.getMonth(),1);
   return db.records.filter(function(r){
@@ -907,17 +1111,21 @@ function filterRecords(){
     var d=new Date(r.startTime);
     if(f.period==='week'&&!inThisWeek(r.startTime))return false;
     if(f.period==='month'&&d<fom)return false;
-    if(f.period==='custom'){if(f.from&&d<new Date(f.from+'T00:00:00'))return false;if(f.to&&d>new Date(f.to+'T23:59:59'))return false;}
+    if(f.period==='custom'){var range=getCPTRange();if(range){if(d<range.from)return false;if(d>range.to)return false;}else return false;}
     return true;
   });
 }
 function renderHistorial(){
   var empSel=document.getElementById('f-emp');if(empSel&&empSel.options.length<=1)initHistorialFilters();
+  var period=document.getElementById('f-period')?document.getElementById('f-period').value:'all';
+  var cw=document.getElementById('f-custom-wrap');if(cw)cw.style.display=period==='custom'?'block':'none';
+  var ns=document.getElementById('f-normal-spacer');if(ns)ns.style.display=period==='custom'?'none':'block';
+  if(period==='custom')populateCPTSelectors();
   var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});
   var totalH=recs.filter(function(r){return r.endTime&&!r.negative;}).reduce(function(acc,r){return acc+durH(r.startTime,r.endTime);},0);
   var active=recs.filter(function(r){return!r.endTime;}).length;
   var se=document.getElementById('hist-summary');
-  if(se){se.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:24px 32px;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:16px;align-items:flex-end"><div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Registros</div><div style="font-size:22px;font-weight:300">'+recs.length+'</div></div><div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Horas totales</div><div style="font-size:22px;font-weight:300">'+totalH.toFixed(1)+'h</div></div>'+(active?'<div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Activos</div><div style="font-size:22px;font-weight:300;color:#4ade80">'+active+'</div></div>':'')+'<div style="margin-left:auto;display:flex;gap:8px;align-items:center"><button class="btn b-edit" onclick="exportCSV()" style="font-size:10px;letter-spacing:2px;padding:10px 16px">Exportar CSV</button><button class="btn b-edit" onclick="exportPDF()" style="font-size:10px;letter-spacing:2px;padding:10px 16px">Exportar PDF</button></div></div>';}
+  if(se){se.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:24px 32px;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:16px;align-items:flex-end"><div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Registros</div><div style="font-size:22px;font-weight:300">'+recs.length+'</div></div><div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Horas totales</div><div style="font-size:22px;font-weight:300">'+totalH.toFixed(1)+'h</div></div>'+(active?'<div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Activos</div><div style="font-size:22px;font-weight:300;color:#4ade80">'+active+'</div></div>':'')+'<div style="margin-left:auto;display:flex;gap:8px;align-items:center"><button class="btn b-edit" onclick="exportCSV()" style="font-size:10px;letter-spacing:2px;padding:10px 16px">Exportar CSV</button><button class="btn b-edit" onclick="smartExportPDF()" style="font-size:10px;letter-spacing:2px;padding:10px 16px">Exportar PDF</button></div></div>';}
   if(!recs.length){document.getElementById('hist-content').innerHTML='<div style="color:var(--muted);font-size:12px;letter-spacing:1px;padding:32px 0">Sin registros para los filtros seleccionados.</div>';return;}
   var cols='1.5fr 2fr 1fr auto 60px';
   var rows=recs.map(function(r){
@@ -973,6 +1181,15 @@ function exportCSV(){var recs=filterRecords().sort(function(a,b){return new Date
 function exportPDF(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var win=window.open('','_blank'),rows=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'activo';return '<tr><td>'+r.employeeName+'</td><td>'+r.categoryName+' / '+r.subName+'</td><td>'+r.task+'</td><td>'+fmtDate(r.startTime)+' '+fmtTime(r.startTime)+'</td><td>'+(r.endTime?fmtTime(r.endTime):'—')+'</td><td>'+(r.negative?'−':'')+dur+'</td></tr>';}).join('');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial</title><style>body{font-family:Inter,sans-serif;padding:40px;color:#111;background:#fff}h1{font-size:24px;font-weight:300;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:32px}table{width:100%;border-collapse:collapse;font-size:13px}th{border-bottom:1px solid #111;padding:10px 0;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:400}td{padding:12px 0;border-bottom:1px solid #eee}@media print{button{display:none}}</style></head><body><h1>Fichaje — Archviz Mallorca</h1><p>'+today()+' · '+recs.length+' registros</p><table><thead><tr><th>Empleado</th><th>Área</th><th>Tarea</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>'+rows+'</tbody></table><br><button onclick="window.print()" style="margin-top:24px;padding:12px 24px;border:1px solid #111;background:transparent;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / PDF</button></body></html>');win.document.close();}
 
 initFirebase();
+
+// Close dp dropdown on outside click
+document.addEventListener('click',function(e){
+  var dd=document.getElementById('dp-dd');if(!dd)return;
+  if(!dd.contains(e.target)&&e.target.id!=='dp-btn'&&!e.target.closest('#dp-btn')){
+    dd.classList.remove('open');
+    var ch=document.getElementById('dp-ch');if(ch)ch.classList.remove('open');
+  }
+});
 </script>
 </body>
 </html>

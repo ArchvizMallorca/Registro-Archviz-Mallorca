@@ -4,14 +4,22 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Ficha Archviz Mallorca</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
 <style>
+@font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-thin.otf') format('opentype');font-weight:100;font-style:normal}
+@font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-book.otf') format('opentype');font-weight:300;font-style:normal}
+@font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-book.otf') format('opentype');font-weight:400;font-style:normal}
+@font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-medium.otf') format('opentype');font-weight:500;font-style:normal}
+@font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-bold.otf') format('opentype');font-weight:600;font-style:normal}
+@font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-bold.otf') format('opentype');font-weight:700;font-style:normal}
+@font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-italic.otf') format('opentype');font-weight:400;font-style:italic}
+@font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-semibolditalic.otf') format('opentype');font-weight:600;font-style:italic}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadein{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 :root{--bg:#111111;--bg2:#181818;--bg3:#1f1f1f;--border:#2a2a2a;--border2:#333;--text:#ffffff;--muted:#aaa;--muted2:#777;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-weight:300;letter-spacing:0.01em}
+body{font-family:'PPNeueMontreal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-weight:300;letter-spacing:0.01em}
 header{background:var(--bg);border-bottom:1px solid var(--border);padding:0 40px;position:sticky;top:0;z-index:10;display:flex;flex-direction:column}
 .header-top{display:flex;justify-content:space-between;align-items:center;padding:20px 0 16px}
 .logo{font-size:13px;font-weight:400;color:var(--text);letter-spacing:2px;text-transform:uppercase}
@@ -22,7 +30,7 @@ header{background:var(--bg);border-bottom:1px solid var(--border);padding:0 40px
 .date-label{font-size:11px;color:var(--muted2);letter-spacing:1px}
 .tabs{display:flex;gap:0;border-top:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab-btn{padding:12px 20px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:11px;font-weight:400;background:transparent;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;border-top:2px solid transparent;margin-top:-1px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.tab-btn{padding:12px 20px;border:none;cursor:pointer;font-family:'PPNeueMontreal',sans-serif;font-size:11px;font-weight:400;background:transparent;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;border-top:2px solid transparent;margin-top:-1px;transition:all .2s;white-space:nowrap;flex-shrink:0}
 .tab-btn.active{color:var(--text);border-top:2px solid var(--text)}
 .tab-btn:hover{color:var(--muted)}
 main{padding:40px;max-width:1100px;margin:0 auto}
@@ -40,7 +48,7 @@ main{padding:40px;max-width:1100px;margin:0 auto}
 .card-meta{display:flex;flex-direction:column;gap:6px}
 .card-hours{font-size:11px;color:var(--muted2);letter-spacing:1px}
 .prog-bg{height:1px;background:var(--border2)}.prog-fill{height:1px;transition:width .6s}
-.ficha-btn{padding:14px 0;border:1px solid var(--border2);cursor:pointer;font-family:'Inter',sans-serif;font-weight:400;font-size:11px;letter-spacing:3px;text-transform:uppercase;background:transparent;color:var(--muted);transition:all .2s;margin-top:4px}
+.ficha-btn{padding:14px 0;border:1px solid var(--border2);cursor:pointer;font-family:'PPNeueMontreal',sans-serif;font-weight:400;font-size:11px;letter-spacing:3px;text-transform:uppercase;background:transparent;color:var(--muted);transition:all .2s;margin-top:4px}
 .ficha-btn:hover{border-color:var(--text);color:var(--text)}
 .ficha-btn.salida{border-color:var(--muted2);color:var(--muted2)}
 .ficha-btn.salida:hover{border-color:#f87171;color:#f87171}
@@ -49,11 +57,11 @@ main{padding:40px;max-width:1100px;margin:0 auto}
 .modal-eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
 .modal-title{font-size:28px;font-weight:300;letter-spacing:-0.5px;margin-bottom:32px}
 .modal-opts{display:flex;flex-direction:column;gap:1px;background:var(--border)}
-.opt-btn{padding:16px 20px;background:var(--bg);border:none;text-align:left;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:300;color:var(--muted);display:flex;justify-content:space-between;align-items:center;transition:all .15s;letter-spacing:0.5px}
+.opt-btn{padding:16px 20px;background:var(--bg);border:none;text-align:left;cursor:pointer;font-family:'PPNeueMontreal',sans-serif;font-size:13px;font-weight:300;color:var(--muted);display:flex;justify-content:space-between;align-items:center;transition:all .15s;letter-spacing:0.5px}
 .opt-btn:hover{background:var(--bg2);color:var(--text)}
 .opt-arrow{font-size:10px;color:var(--muted2)}
 .modal-footer{margin-top:24px;display:flex;gap:12px}
-.btn-back,.btn-cancel{padding:12px 24px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-back,.btn-cancel{padding:12px 24px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'PPNeueMontreal',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
 .btn-back:hover,.btn-cancel:hover{border-color:var(--text);color:var(--text)}
 .bc{font-size:11px;color:var(--muted2);letter-spacing:1px;margin-bottom:12px}
 .tbl{border:1px solid var(--border);background:var(--bg);margin-bottom:1px}
@@ -95,11 +103,11 @@ main{padding:40px;max-width:1100px;margin:0 auto}
 .cfg-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid var(--border)}
 .cfg-row:last-of-type{border-bottom:none}
 .cfg-label{flex:1;font-size:14px;font-weight:300}.cfg-sub{font-size:11px;color:var(--muted2);margin-top:3px}
-input,textarea{background:transparent;border:none;border-bottom:1px solid var(--border2);border-radius:0;padding:8px 0;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;font-weight:300;transition:border-color .2s}
+input,textarea{background:transparent;border:none;border-bottom:1px solid var(--border2);border-radius:0;padding:8px 0;color:var(--text);font-family:'PPNeueMontreal',sans-serif;font-size:13px;outline:none;font-weight:300;transition:border-color .2s}
 input:focus,textarea:focus{border-bottom-color:var(--text)}
 input::placeholder,textarea::placeholder{color:var(--muted2)}
 input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{opacity:1;cursor:pointer}
-.btn{padding:8px 16px;cursor:pointer;font-family:'Inter',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-radius:0;transition:all .2s}
+.btn{padding:8px 16px;cursor:pointer;font-family:'PPNeueMontreal',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-radius:0;transition:all .2s}
 .b-edit{border:1px solid var(--border2);background:transparent;color:var(--muted)}
 .b-edit:hover{border-color:var(--text);color:var(--text)}
 .b-del{border:1px solid var(--border2);background:transparent;color:var(--muted2)}
@@ -107,7 +115,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .b-save{border:1px solid var(--text);background:var(--text);color:var(--bg);font-weight:500}
 .b-save-red{border:1px solid #f87171;background:#f87171;color:#111;font-weight:500}
 .b-cancel{border:1px solid var(--border2);background:transparent;color:var(--muted2)}
-.btn-add{width:100%;padding:16px;border:1px dashed var(--border2);background:transparent;color:var(--muted2);cursor:pointer;font-family:'Inter',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;transition:all .2s;margin-top:1px}
+.btn-add{width:100%;padding:16px;border:1px dashed var(--border2);background:transparent;color:var(--muted2);cursor:pointer;font-family:'PPNeueMontreal',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;transition:all .2s;margin-top:1px}
 .btn-add:hover{border-color:var(--text);color:var(--text)}
 .cfg-btns{display:flex;gap:8px;flex-shrink:0;align-items:center}
 @media(max-width:640px){
@@ -124,15 +132,15 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
   .cfg-label{font-size:13px}
 }
 .mode-toggle{display:flex;gap:1px;background:var(--border);margin-bottom:28px}
-.mode-btn{flex:1;padding:12px;border:none;background:var(--bg2);color:var(--muted);font-family:'Inter',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.mode-btn{flex:1;padding:12px;border:none;background:var(--bg2);color:var(--muted);font-family:'PPNeueMontreal',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
 .mode-btn.active-add{background:var(--text);color:var(--bg);font-weight:500}
 .mode-btn.active-sub{background:#f87171;color:#111;font-weight:500}
-.sel{width:100%;background:#181818;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 0;outline:none;color-scheme:dark}
+.sel{width:100%;background:#181818;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'PPNeueMontreal',sans-serif;font-size:13px;padding:8px 0;outline:none;color-scheme:dark}
 .lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 /* CALENDAR */
 .cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
 .cal-nav-title{font-size:14px;font-weight:300;letter-spacing:2px;text-transform:uppercase}
-.cal-nav-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:8px 16px;cursor:pointer;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:1px;transition:all .2s}
+.cal-nav-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:8px 16px;cursor:pointer;font-family:'PPNeueMontreal',sans-serif;font-size:11px;letter-spacing:1px;transition:all .2s}
 .cal-nav-btn:hover{border-color:var(--text);color:var(--text)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:32px}
 .cal-dow{background:var(--bg);padding:10px 4px;text-align:center;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2)}
@@ -153,7 +161,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .day-panel-date{font-size:20px;font-weight:300;letter-spacing:-0.3px}
 .day-panel-total{font-size:32px;font-weight:300;color:var(--text)}
 .dp-title-wrap{position:relative;display:inline-block}
-.dp-title-btn{font-size:20px;font-weight:300;letter-spacing:-0.3px;background:transparent;border:none;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;padding:0;display:flex;align-items:center;gap:8px;line-height:1.2}
+.dp-title-btn{font-size:20px;font-weight:300;letter-spacing:-0.3px;background:transparent;border:none;color:var(--text);cursor:pointer;font-family:'PPNeueMontreal',sans-serif;padding:0;display:flex;align-items:center;gap:8px;line-height:1.2}
 .dp-chevron{font-size:10px;color:var(--muted2);transition:transform .2s;display:inline-block;margin-top:3px}
 .dp-chevron.open{transform:rotate(180deg)}
 .dp-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border2);min-width:220px;z-index:50;display:none}
@@ -163,7 +171,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .dp-option:hover{background:var(--bg3);color:var(--text)}
 .dp-option.dp-active{color:var(--text);font-weight:400}
 .cpt{display:flex;gap:1px;background:var(--border);margin-bottom:20px}
-.cpt-btn{flex:1;padding:10px;border:none;background:var(--bg2);color:var(--muted);font-family:'Inter',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent}
+.cpt-btn{flex:1;padding:10px;border:none;background:var(--bg2);color:var(--muted);font-family:'PPNeueMontreal',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent}
 .cpt-btn.active{color:var(--text);border-bottom:2px solid var(--text);background:var(--bg3)}
 .day-records{display:flex;flex-direction:column;gap:1px;background:var(--border);margin-bottom:20px}
 .day-record{background:var(--bg);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
@@ -303,7 +311,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
           <div class="lbl">Fecha</div>
           <div style="display:flex;gap:10px;align-items:center">
             <input id="ah-date" type="date" style="flex:1;color-scheme:dark"/>
-            <button onclick="ahUseNow()" style="white-space:nowrap;padding:6px 12px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--text)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">Ahora</button>
+            <button onclick="ahUseNow()" style="white-space:nowrap;padding:6px 12px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'PPNeueMontreal',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--text)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">Ahora</button>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -316,7 +324,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
       <div style="display:flex;flex-direction:column;gap:20px">
         <div><div class="lbl">Empleado</div><select id="sub-emp" class="sel" onchange="subUpdateRecords()"></select></div>
         <div><div class="lbl">Registro</div><select id="sub-rec" class="sel" onchange="subRecordChanged()"></select></div>
-        <div><div class="lbl">Horas a restar</div><input id="sub-hours" type="number" min="0.25" max="24" step="0.25" placeholder="ej. 1.5" oninput="subUpdatePreview()" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 0;outline:none"/></div>
+        <div><div class="lbl">Horas a restar</div><input id="sub-hours" type="number" min="0.25" max="24" step="0.25" placeholder="ej. 1.5" oninput="subUpdatePreview()" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'PPNeueMontreal',sans-serif;font-size:13px;padding:8px 0;outline:none"/></div>
         <div id="sub-preview" style="font-size:11px;color:var(--muted2);letter-spacing:0.5px;padding:12px 0;border-top:1px solid var(--border)">Selecciona un registro y las horas a restar.</div>
       </div>
     </div>
@@ -1001,7 +1009,7 @@ function buildPeriodPDF(recs,periodLabel){
   var win=window.open('','_blank');
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+periodLabel+' — Archviz Mallorca</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">'
-    +'<style>*{box-sizing:border-box}body{font-family:Inter,sans-serif;padding:56px;color:#111;background:#fff;max-width:900px;margin:0 auto}'
+    +'<style>*{box-sizing:border-box}body{font-family:PPNeueMontreal,sans-serif;padding:56px;color:#111;background:#fff;max-width:900px;margin:0 auto}'
     +'@media print{.no-print{display:none!important}body{padding:24px}}</style></head><body>'
     +'<div class="no-print" style="margin-bottom:40px;display:flex;gap:12px">'
     +'<button onclick="window.print()" style="padding:13px 28px;background:#111;color:#fff;border:none;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / Guardar PDF</button>'
@@ -1178,7 +1186,7 @@ function addSub(catId){var name=document.getElementById('ns-name').value.trim(),
 function delVac(idx){if(!confirm('¿Eliminar estas vacaciones?'))return;cfgState={};db.vacations.splice(idx,1);render();persist();}
 
 function exportCSV(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var hdr='Empleado,Categoría,Subcategoría,Tarea,Fecha,Entrada,Salida,Horas,Tipo\n',body=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(2):'';var tipo=r.negative?'Ajuste negativo':r.manual?'Manual':'Fichaje';return '"'+r.employeeName+'","'+r.categoryName+'","'+r.subName+'","'+r.task+'","'+fmtDate(r.startTime)+'","'+fmtTime(r.startTime)+'","'+(r.endTime?fmtTime(r.endTime):'activo')+'","'+dur+'","'+tipo+'"';}).join('\n');var blob=new Blob(['\uFEFF'+hdr+body],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fichajes_'+today().replace(/\//g,'-')+'.csv';a.click();}
-function exportPDF(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var win=window.open('','_blank'),rows=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'activo';return '<tr><td>'+r.employeeName+'</td><td>'+r.categoryName+' / '+r.subName+'</td><td>'+r.task+'</td><td>'+fmtDate(r.startTime)+' '+fmtTime(r.startTime)+'</td><td>'+(r.endTime?fmtTime(r.endTime):'—')+'</td><td>'+(r.negative?'−':'')+dur+'</td></tr>';}).join('');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial</title><style>body{font-family:Inter,sans-serif;padding:40px;color:#111;background:#fff}h1{font-size:24px;font-weight:300;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:32px}table{width:100%;border-collapse:collapse;font-size:13px}th{border-bottom:1px solid #111;padding:10px 0;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:400}td{padding:12px 0;border-bottom:1px solid #eee}@media print{button{display:none}}</style></head><body><h1>Fichaje — Archviz Mallorca</h1><p>'+today()+' · '+recs.length+' registros</p><table><thead><tr><th>Empleado</th><th>Área</th><th>Tarea</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>'+rows+'</tbody></table><br><button onclick="window.print()" style="margin-top:24px;padding:12px 24px;border:1px solid #111;background:transparent;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / PDF</button></body></html>');win.document.close();}
+function exportPDF(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var win=window.open('','_blank'),rows=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'activo';return '<tr><td>'+r.employeeName+'</td><td>'+r.categoryName+' / '+r.subName+'</td><td>'+r.task+'</td><td>'+fmtDate(r.startTime)+' '+fmtTime(r.startTime)+'</td><td>'+(r.endTime?fmtTime(r.endTime):'—')+'</td><td>'+(r.negative?'−':'')+dur+'</td></tr>';}).join('');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial</title><style>body{font-family:PPNeueMontreal,sans-serif;padding:40px;color:#111;background:#fff}h1{font-size:24px;font-weight:300;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:32px}table{width:100%;border-collapse:collapse;font-size:13px}th{border-bottom:1px solid #111;padding:10px 0;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:400}td{padding:12px 0;border-bottom:1px solid #eee}@media print{button{display:none}}</style></head><body><h1>Fichaje — Archviz Mallorca</h1><p>'+today()+' · '+recs.length+' registros</p><table><thead><tr><th>Empleado</th><th>Área</th><th>Tarea</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>'+rows+'</tbody></table><br><button onclick="window.print()" style="margin-top:24px;padding:12px 24px;border:1px solid #111;background:transparent;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / PDF</button></body></html>');win.document.close();}
 
 initFirebase();
 

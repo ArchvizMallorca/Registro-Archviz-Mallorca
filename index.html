@@ -727,18 +727,19 @@ function renderSemana(){
 }
 
 function getPastWeeks(){
-  var weeks={},curMon=getMonday().toISOString().slice(0,10);
+  var weeks={},curMon=getMonday();
+  var curKey=curMon.getFullYear()+'-'+(curMon.getMonth()+1).toString().padStart(2,'0')+'-'+curMon.getDate().toString().padStart(2,'0');
   for(var i=0;i<db.records.length;i++){
     var d=new Date(db.records[i].startTime),day=d.getDay();
     d.setDate(d.getDate()-(day===0?6:day-1));d.setHours(0,0,0,0);
-    var iso=d.toISOString().slice(0,10);
-    if(iso<curMon)weeks[iso]=true;
+    var iso=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+    if(iso<curKey)weeks[iso]=true;
   }
   return Object.keys(weeks).sort(function(a,b){return b.localeCompare(a);});
 }
 
 function fmtWeekRange(mondayISO){
-  var mon=new Date(mondayISO+'T00:00:00'),sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  var p=mondayISO.split('-'),mon=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2])),sun=new Date(mon);sun.setDate(mon.getDate()+6);
   var ms=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   if(mon.getMonth()===sun.getMonth())return mon.getDate()+' – '+sun.getDate()+' '+ms[sun.getMonth()]+' '+sun.getFullYear();
   return mon.getDate()+' '+ms[mon.getMonth()]+(mon.getFullYear()!==sun.getFullYear()?' '+mon.getFullYear():'')+' – '+sun.getDate()+' '+ms[sun.getMonth()]+' '+sun.getFullYear();
@@ -803,7 +804,7 @@ function exportMonthPDF(ym){
 
 function exportWeekPDF(mondayISO){
   if(!mondayISO){alert('Selecciona una semana.');return;}
-  var mon=new Date(mondayISO+'T00:00:00'),sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);
+  var p=mondayISO.split('-'),mon=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]),0,0,0,0),sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);
   var weekRecs=db.records.filter(function(r){var d=new Date(r.startTime);return r.endTime&&d>=mon&&d<=sun;});
   buildPeriodPDF(weekRecs,'Semana '+fmtWeekRange(mondayISO));
 }

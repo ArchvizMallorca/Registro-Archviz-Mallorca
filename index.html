@@ -89,6 +89,15 @@ main{padding:40px;max-width:1100px;margin:0 auto}
 .week-row{display:flex;justify-content:space-between;font-size:12px}
 .week-row-label{color:var(--muted)}.week-row-val{color:var(--text);font-weight:400}
 .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)}
+.proj-search-wrap{position:relative;margin-bottom:28px}
+.proj-search-wrap svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted2)}
+.proj-search-input{width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:'PPNeueMontreal',sans-serif;font-size:13px;padding:14px 16px 14px 44px;outline:none;letter-spacing:0.3px;transition:border-color .2s}
+.proj-search-input:focus{border-color:var(--text)}
+.proj-search-input::placeholder{color:var(--muted2)}
+.proj-search-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted2);cursor:pointer;font-size:16px;line-height:1;padding:4px;display:none;transition:color .15s}
+.proj-search-clear:hover{color:var(--text)}
+.proj-search-stats{font-size:10px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;margin-top:-16px}
+.proj-search-highlight{background:rgba(255,255,255,0.15);border-radius:2px;padding:0 1px}
 .proj-card{background:var(--bg);padding:28px;display:flex;flex-direction:column;gap:12px}
 .proj-name{font-size:18px;font-weight:300;letter-spacing:-0.3px}
 .proj-cat{font-size:10px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
@@ -1102,6 +1111,7 @@ function buildPeriodPDF(recs,periodLabel){
 var projTab='proyectos'; // 'proyectos' | 'reuniones' | 'admin'
 var projStatusTab='active'; // 'active' | 'standby' | 'done'
 var mmpSubId=null,mmpTargetStatus=null,mmpFolderSel=null;
+var projSearchQuery='';
 
 function getProjectCatId(){for(var i=0;i<db.categories.length;i++)if(db.categories[i].name==='Proyectos'||db.categories[i].id==='c1')return db.categories[i].id;return db.categories.length?db.categories[0].id:null;}
 function getReunCatId(){for(var i=0;i<db.categories.length;i++)if(db.categories[i].name==='Reuniones'||db.categories[i].id==='c2')return db.categories[i].id;return null;}
@@ -1110,7 +1120,7 @@ function getAdminCatId(){for(var i=0;i<db.categories.length;i++)if(db.categories
 function getProjMeta(subId){if(!db.projectMeta)db.projectMeta={};return db.projectMeta[subId]||{status:'active',folderId:null};}
 function setProjMeta(subId,meta){if(!db.projectMeta)db.projectMeta={};db.projectMeta[subId]=meta;}
 
-function setProjTab(t){projTab=t;renderProyectos();}
+function setProjTab(t){projTab=t;projSearchQuery='';renderProyectos();}
 function setProjStatusTab(t){projStatusTab=t;renderProyectos();}
 
 function toggleFolder(fid){
@@ -1215,26 +1225,20 @@ function renderProyectos(){
     var projCat=null;for(var i=0;i<db.categories.length;i++)if(db.categories[i].id==='c1'||db.categories[i].name==='Proyectos'){projCat=db.categories[i];break;}
     if(!projCat){html+='<div style="color:var(--muted);font-size:12px;letter-spacing:1px">Sin categoría Proyectos.</div>';document.getElementById('proyectos-content').innerHTML=html;return;}
     var subs=projCat.subs||[];
-    var activeCount=subs.filter(function(s){var m=getProjMeta(s.id);return(m.status||'active')==='active';}).length;
-    var standbyCount=subs.filter(function(s){var m=getProjMeta(s.id);return m.status==='standby';}).length;
-    var doneCount=subs.filter(function(s){var m=getProjMeta(s.id);return m.status==='done';}).length;
 
-    // En marcha
-    html+='<div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Proyectos en marcha<span style="font-size:11px;letter-spacing:1px;color:var(--muted2);font-weight:300">'+activeCount+'</span></div>';
-    html+=renderSubsSection(subs,projCat,'active');
-    html+='<div style="margin-bottom:40px"></div>';
+    // Search bar
+    html+='<div class="proj-search-wrap">'
+      +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      +'<input class="proj-search-input" id="proj-search-input" type="text" placeholder="Buscar proyectos..." value="'+projSearchQuery.replace(/"/g,'&quot;')+'" oninput="projSearchQuery=this.value;var cl=document.getElementById(\'proj-search-clear\');if(cl)cl.style.display=this.value?\'block\':\'none\';renderProjSearchResults()" autocomplete="off" spellcheck="false"/>'
+      +'<button class="proj-search-clear" id="proj-search-clear" onclick="projSearchQuery=\'\';document.getElementById(\'proj-search-input\').value=\'\';this.style.display=\'none\';renderProjSearchResults()" style="display:'+(projSearchQuery?'block':'none')+'" title="Limpiar">✕</button>'
+      +'</div>';
 
-    // Stand by
-    html+='<div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Stand by<span style="font-size:11px;letter-spacing:1px;color:var(--muted2);font-weight:300">'+standbyCount+'</span></div>';
-    html+=renderSubsSection(subs,projCat,'standby');
-    html+='<div style="margin-bottom:40px"></div>';
+    html+='<div id="proj-search-results"></div>';
 
-    // Terminados
-    html+='<div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Terminados<span style="font-size:11px;letter-spacing:1px;color:var(--muted2);font-weight:300">'+doneCount+'</span></div>';
-    html+=renderSubsSection(subs,projCat,'done');
-    html+='<div style="margin-bottom:40px"></div>';
+    document.getElementById('proyectos-content').innerHTML=html;
+    renderProjSearchResults();
+    return;
 
-  } else if(projTab==='reuniones'){
     var reunCat=null;for(var i=0;i<db.categories.length;i++)if(db.categories[i].id==='c2'||db.categories[i].name==='Reuniones'){reunCat=db.categories[i];break;}
     if(!reunCat){html+='<div style="color:var(--muted);font-size:12px;letter-spacing:1px">Sin categoría Reuniones.</div>';document.getElementById('proyectos-content').innerHTML=html;return;}
     html+='<div class="proj-section-header"><div class="proj-section-label">Reuniones</div></div><div class="proj-grid">';
@@ -1262,6 +1266,53 @@ function renderProyectos(){
   }
 
   document.getElementById('proyectos-content').innerHTML=html;
+}
+
+function renderProjSearchResults(){
+  var container=document.getElementById('proj-search-results');
+  if(!container)return;
+  var projCat=null;for(var i=0;i<db.categories.length;i++)if(db.categories[i].id==='c1'||db.categories[i].name==='Proyectos'){projCat=db.categories[i];break;}
+  if(!projCat){container.innerHTML='';return;}
+  var subs=projCat.subs||[];
+  var q=projSearchQuery.trim().toLowerCase();
+  var html='';
+
+  if(q){
+    // Search mode: show all matching projects across all statuses
+    var matched=subs.filter(function(s){return s.name.toLowerCase().indexOf(q)!==-1;});
+    var statusOrder=['active','standby','done'];
+    var statusLabel={active:'En marcha',standby:'Stand by',done:'Terminado'};
+    var found=0;
+    statusOrder.forEach(function(st){
+      var group=matched.filter(function(s){var m=getProjMeta(s.id);return(m.status||'active')===st;});
+      if(!group.length)return;
+      found+=group.length;
+      html+='<div class="section-title" style="display:flex;justify-content:space-between;align-items:center">'+statusLabel[st]+'<span style="font-size:11px;letter-spacing:1px;color:var(--muted2);font-weight:300">'+group.length+'</span></div>';
+      html+='<div class="proj-grid" style="margin-bottom:32px">';
+      group.forEach(function(s){html+=renderProjCard(s,projCat,true);});
+      html+='</div>';
+    });
+    if(!found){
+      html='<div style="padding:48px 0;text-align:center"><div style="font-size:13px;color:var(--muted);letter-spacing:1px">Sin resultados para <span style="color:var(--text)">\''+projSearchQuery+'\'</span></div><div style="font-size:11px;color:var(--muted2);letter-spacing:0.5px;margin-top:8px">Prueba con otro término</div></div>';
+    } else {
+      html='<div class="proj-search-stats">'+found+' resultado'+(found!==1?'s':'')+' para "'+projSearchQuery+'"</div>'+html;
+    }
+  } else {
+    // Normal mode: show all sections
+    var activeCount=subs.filter(function(s){var m=getProjMeta(s.id);return(m.status||'active')==='active';}).length;
+    var standbyCount=subs.filter(function(s){var m=getProjMeta(s.id);return m.status==='standby';}).length;
+    var doneCount=subs.filter(function(s){var m=getProjMeta(s.id);return m.status==='done';}).length;
+    html+='<div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Proyectos en marcha<span style="font-size:11px;letter-spacing:1px;color:var(--muted2);font-weight:300">'+activeCount+'</span></div>';
+    html+=renderSubsSection(subs,projCat,'active');
+    html+='<div style="margin-bottom:40px"></div>';
+    html+='<div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Stand by<span style="font-size:11px;letter-spacing:1px;color:var(--muted2);font-weight:300">'+standbyCount+'</span></div>';
+    html+=renderSubsSection(subs,projCat,'standby');
+    html+='<div style="margin-bottom:40px"></div>';
+    html+='<div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Terminados<span style="font-size:11px;letter-spacing:1px;color:var(--muted2);font-weight:300">'+doneCount+'</span></div>';
+    html+=renderSubsSection(subs,projCat,'done');
+    html+='<div style="margin-bottom:40px"></div>';
+  }
+  container.innerHTML=html;
 }
 
 /* ── MOVE PROJECT MODAL ── */

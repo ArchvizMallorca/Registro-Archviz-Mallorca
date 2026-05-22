@@ -760,7 +760,7 @@ function renderDayPanel(key){
 
     panel.innerHTML='<div class="day-panel">'
       +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+isoToDisplay(key)+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
-      +'<div style="text-align:right"><div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Total</div><div class="day-panel-total" style="color:'+(totalH>8?'#f87171':'var(--text)')+'">'+totalH.toFixed(1)+'h</div></div></div>'
+      +'<div style="text-align:right"><div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Total</div><div class="day-panel-total">'+totalH.toFixed(1)+'h</div></div></div>'
       +'<div style="display:flex;gap:8px;margin-bottom:16px"><button class="btn b-edit" onclick="openHoursModalForDay(\''+key+'\')">+ Añadir horas</button></div>'
       +dayCardsHtml
       +vacSection+'<div class="day-records">'+recRows+'</div>'+noteSection+'</div>';

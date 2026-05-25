@@ -276,8 +276,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
         <div style="background:var(--bg);padding:16px 20px">
           <div class="lbl">Período</div>
           <select id="f-period" onchange="onFPeriodChange()" class="sel" style="font-size:12px;padding:4px 0">
-            <option value="all">Todo</option><option value="week">Esta semana</option>
-            <option value="month">Este mes</option><option value="custom">Personalizado</option>
+            <option value="all">Todo</option><option value="custom">Personalizado</option>
           </select>
         </div>
         <div style="background:var(--bg);padding:16px 20px">
@@ -1435,7 +1434,16 @@ function getCPTRange(){
 
 function smartExportPDF(){
   var period=document.getElementById('f-period')?document.getElementById('f-period').value:'all';
-  if(period==='custom'){exportCustomPDF();}else{exportPDF();}
+  if(period==='custom'){exportCustomPDF();}else{exportAllPDF();}
+}
+
+function exportAllPDF(){
+  var recs=filterRecords().filter(function(r){return r.endTime;});
+  if(!recs.length){alert('Sin registros.');return;}
+  var empId=document.getElementById('f-emp')?document.getElementById('f-emp').value:'all';
+  var empName=empId!=='all'?(db.employees.find(function(e){return e.id==empId;})||{}).name||'':'Todos los empleados';
+  var label='Historial completo'+(empName&&empId!=='all'?' — '+empName:'');
+  buildPeriodPDF(recs,label);
 }
 
 function exportCustomPDF(){

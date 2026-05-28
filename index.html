@@ -126,6 +126,14 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .b-cancel{border:1px solid var(--border2);background:transparent;color:var(--muted2)}
 .btn-add{width:100%;padding:16px;border:1px dashed var(--border2);background:transparent;color:var(--muted2);cursor:pointer;font-family:'PPNeueMontreal',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;transition:all .2s;margin-top:1px}
 .btn-add:hover{border-color:var(--text);color:var(--text)}
+.action-btns{display:flex;gap:10px}
+.action-menu-wrap{display:none;position:relative}
+.action-dropdown{position:absolute;right:0;top:calc(100% + 6px);background:#1a1a1a;border:1px solid var(--border2);min-width:210px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.tag-extra{font-size:9px;letter-spacing:1.5px;color:var(--text);border:1px solid var(--border2);padding:1px 5px;margin-left:6px;vertical-align:middle;display:inline-block}
+@media(max-width:640px){
+  .action-btns{display:none!important}
+  .action-menu-wrap{display:block}
+}
 .cfg-btns{display:flex;gap:8px;flex-shrink:0;align-items:center}
 @media(max-width:640px){
   main{padding:24px 16px}
@@ -256,8 +264,21 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
   <main>
     <div id="tab-fichaje">
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:24px">
-        <button class="btn b-edit" onclick="openVacModal()" style="font-size:10px;letter-spacing:2px;padding:10px 20px"><svg width="13" height="13" viewBox="364 212 82 82" style="vertical-align:middle;margin-right:6px" xmlns="http://www.w3.org/2000/svg"><path stroke="#fff" fill="#fff" stroke-miterlimit="10" d="M376.91,224.49c1.59-.14,5.94-.3,10.45,2.32,5.25,3.05,7.21,7.83,7.73,9.22,1.56-.43,8.2-2.06,15.29,1.51,7.51,3.79,10.07,10.68,10.56,12.1.96-.35,7-2.44,13.26.87,5.59,2.96,7.46,8.16,7.84,9.29.84-3.11,1.67-7.87.78-13.43-2.5-15.63-16.36-23.89-19.6-25.67-13.71-7.53-31.55-5.84-46.31,3.78Z"/><path stroke="#fff" fill="none" stroke-linejoin="round" d="M395.35,235.73c2.28-2.72,6.29-6.83,12.39-10.18,6.08-3.34,11.68-4.53,15.19-5,1.14,2.42,3.25,7.72,2.81,14.67-.45,7.11-3.33,12.18-4.8,14.43"/><line stroke="#fff" stroke-width="2" stroke-miterlimit="10" x1="422.59" y1="220.92" x2="387.36" y2="279.63"/><rect stroke="#fff" fill="#fff" stroke-miterlimit="10" x="369.49" y="279.05" width="74.71" height="11.4"/></svg> Añadir vacaciones</button>
-        <button class="btn b-edit" onclick="openHoursModal()" style="font-size:10px;letter-spacing:2px;padding:10px 20px">± Ajustar horas</button>
+        <div class="action-btns">
+          <button class="btn b-edit" onclick="openVacModal()" style="font-size:10px;letter-spacing:2px;padding:10px 20px"><svg width="13" height="13" viewBox="364 212 82 82" style="vertical-align:middle;margin-right:6px" xmlns="http://www.w3.org/2000/svg"><path stroke="#fff" fill="#fff" stroke-miterlimit="10" d="M376.91,224.49c1.59-.14,5.94-.3,10.45,2.32,5.25,3.05,7.21,7.83,7.73,9.22,1.56-.43,8.2-2.06,15.29,1.51,7.51,3.79,10.07,10.68,10.56,12.1.96-.35,7-2.44,13.26.87,5.59,2.96,7.46,8.16,7.84,9.29.84-3.11,1.67-7.87.78-13.43-2.5-15.63-16.36-23.89-19.6-25.67-13.71-7.53-31.55-5.84-46.31,3.78Z"/><path stroke="#fff" fill="none" stroke-linejoin="round" d="M395.35,235.73c2.28-2.72,6.29-6.83,12.39-10.18,6.08-3.34,11.68-4.53,15.19-5,1.14,2.42,3.25,7.72,2.81,14.67-.45,7.11-3.33,12.18-4.8,14.43"/><line stroke="#fff" stroke-width="2" stroke-miterlimit="10" x1="422.59" y1="220.92" x2="387.36" y2="279.63"/><rect stroke="#fff" fill="#fff" stroke-miterlimit="10" x="369.49" y="279.05" width="74.71" height="11.4"/></svg> Añadir vacaciones</button>
+          <button class="btn b-edit" onclick="openHoursModal()" style="font-size:10px;letter-spacing:2px;padding:10px 20px">± Ajustar horas</button>
+          <button class="btn b-edit" onclick="openOTModal()" style="font-size:10px;letter-spacing:2px;padding:10px 20px">+ Horas extras</button>
+        </div>
+        <div class="action-menu-wrap">
+          <button class="btn b-edit action-menu-btn" onclick="toggleActionMenu()" style="padding:10px 14px" title="Acciones">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="17" cy="17" r="3"/><line x1="17" y1="15.5" x2="17" y2="18.5"/><line x1="15.5" y1="17" x2="18.5" y2="17"/></svg>
+          </button>
+          <div id="action-dropdown" class="action-dropdown hidden">
+            <button class="btn b-edit" onclick="openVacModal();closeActionMenu()" style="font-size:11px;letter-spacing:1.5px;padding:14px 18px;border:none;border-bottom:1px solid var(--border);border-radius:0;text-align:left;width:100%"><svg width="12" height="12" viewBox="364 212 82 82" style="vertical-align:middle;margin-right:8px" xmlns="http://www.w3.org/2000/svg"><path stroke="#fff" fill="#fff" stroke-miterlimit="10" d="M376.91,224.49c1.59-.14,5.94-.3,10.45,2.32,5.25,3.05,7.21,7.83,7.73,9.22,1.56-.43,8.2-2.06,15.29,1.51,7.51,3.79,10.07,10.68,10.56,12.1.96-.35,7-2.44,13.26.87,5.59,2.96,7.46,8.16,7.84,9.29.84-3.11,1.67-7.87.78-13.43-2.5-15.63-16.36-23.89-19.6-25.67-13.71-7.53-31.55-5.84-46.31,3.78Z"/><path stroke="#fff" fill="none" stroke-linejoin="round" d="M395.35,235.73c2.28-2.72,6.29-6.83,12.39-10.18,6.08-3.34,11.68-4.53,15.19-5,1.14,2.42,3.25,7.72,2.81,14.67-.45,7.11-3.33,12.18-4.8,14.43"/><line stroke="#fff" stroke-width="2" stroke-miterlimit="10" x1="422.59" y1="220.92" x2="387.36" y2="279.63"/><rect stroke="#fff" fill="#fff" stroke-miterlimit="10" x="369.49" y="279.05" width="74.71" height="11.4"/></svg>Añadir vacaciones</button>
+            <button class="btn b-edit" onclick="openHoursModal();closeActionMenu()" style="font-size:11px;letter-spacing:1.5px;padding:14px 18px;border:none;border-bottom:1px solid var(--border);border-radius:0;text-align:left;width:100%">± Ajustar horas</button>
+            <button class="btn b-edit" onclick="openOTModal();closeActionMenu()" style="font-size:11px;letter-spacing:1.5px;padding:14px 18px;border:none;border-radius:0;text-align:left;width:100%">+ Horas extras</button>
+          </div>
+        </div>
       </div>
       <div class="grid" id="grid"></div>
     </div>
@@ -374,6 +395,31 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
   </div>
 </div>
 
+<!-- MODAL HORAS EXTRAS -->
+<div class="modal-bg hidden" id="m-overtime">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-eyebrow">Registro especial</div>
+    <div class="modal-title">Añadir horas extras</div>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div><div class="lbl">Empleado</div><select id="ot-emp" class="sel"></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div><div class="lbl">Fecha</div><input id="ot-date" type="date" style="width:100%;color-scheme:dark"/></div>
+        <div><div class="lbl">Horas</div><input id="ot-hours" type="number" min="0.25" max="24" step="0.25" placeholder="ej. 2.5" style="width:100%"/></div>
+      </div>
+      <div><div class="lbl">Tarea</div>
+        <div style="display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border2);padding-bottom:8px">
+          <div id="ot-task-display" style="flex:1;font-size:12px;color:var(--muted2)">Sin seleccionar</div>
+          <button class="btn b-edit" onclick="openOTTaskSelection()" style="font-size:10px;letter-spacing:1.5px;padding:8px 14px;white-space:nowrap;flex-shrink:0">Elegir tarea →</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="margin-top:32px">
+      <button class="btn b-save" onclick="saveOT()" style="flex:1;padding:14px;font-size:11px;letter-spacing:2px">Guardar</button>
+      <button class="btn-cancel" onclick="document.getElementById('m-overtime').classList.add('hidden')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EDITAR REGISTRO -->
 <div class="modal-bg hidden" id="m-edit-record">
   <div class="modal" style="max-width:480px">
@@ -466,6 +512,7 @@ function todayISO(){return new Date().toISOString().slice(0,10);}
 function fmtDate(i){return new Date(i).toLocaleDateString('es-ES');}
 function fmtTime(i){return new Date(i).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
 function durH(a,b){return Math.round((new Date(b)-new Date(a))/36000)/100;}
+function fmtActivity(r){var p=[r.categoryName];if(r.subName&&r.subName!==r.categoryName)p.push(r.subName);if(r.task&&r.task!==r.subName&&r.task!==r.categoryName)p.push(r.task);return (r.overtime?'Horas extras / ':'')+p.join(' / ');}
 function clone(o){return JSON.parse(JSON.stringify(o));}
 function getMonday(){var d=new Date(),day=d.getDay();d.setDate(d.getDate()-(day===0?6:day-1));d.setHours(0,0,0,0);return d;}
 function inThisWeek(iso){var mon=getMonday(),sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);return new Date(iso)>=mon&&new Date(iso)<=sun;}
@@ -536,9 +583,52 @@ function switchTab(name){
 }
 
 function activeRecord(empId){for(var i=0;i<db.records.length;i++)if(db.records[i].employeeId===empId&&!db.records[i].endTime)return db.records[i];return null;}
-function weekHours(empId){var t=0;for(var i=0;i<db.records.length;i++){var r=db.records[i];if(r.employeeId===empId&&r.endTime&&inThisWeek(r.startTime)){var h=durH(r.startTime,r.endTime);t+=r.negative?-h:h;}}return Math.max(0,t);}
+function weekHours(empId){var t=0;for(var i=0;i<db.records.length;i++){var r=db.records[i];if(r.employeeId===empId&&r.endTime&&!r.overtime&&inThisWeek(r.startTime)){var h=durH(r.startTime,r.endTime);t+=r.negative?-h:h;}}return Math.max(0,t);}
+function overtimeWeekHours(empId){var t=0;for(var i=0;i<db.records.length;i++){var r=db.records[i];if(r.employeeId===empId&&r.endTime&&r.overtime&&inThisWeek(r.startTime))t+=durH(r.startTime,r.endTime);}return t;}
 
 /* ── VACACIONES ── */
+var otMode=false,otTaskData=null;
+function openOTModal(){
+  otTaskData=null;
+  document.getElementById('m-overtime').classList.remove('hidden');
+  var empSel=document.getElementById('ot-emp');
+  empSel.innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('');
+  document.getElementById('ot-date').value=todayISO();
+  document.getElementById('ot-hours').value='';
+  document.getElementById('ot-task-display').textContent='Sin seleccionar';
+  document.getElementById('ot-task-display').style.color='var(--muted2)';
+}
+function openOTTaskSelection(){
+  var empId=parseInt(document.getElementById('ot-emp').value);
+  var emp=db.employees.find(function(e){return e.id===empId;});
+  if(!emp){alert('Selecciona un empleado primero.');return;}
+  otMode=true;
+  document.getElementById('m-overtime').classList.add('hidden');
+  mEmp=emp;mCat=null;mSub=null;openStep1();
+}
+function saveOT(){
+  var empId=parseInt(document.getElementById('ot-emp').value);
+  var dateVal=document.getElementById('ot-date').value;
+  var hours=parseFloat(document.getElementById('ot-hours').value);
+  if(!dateVal||isNaN(hours)||hours<=0){alert('Rellena empleado, fecha y horas.');return;}
+  if(!otTaskData){alert('Elige una tarea antes de guardar.');return;}
+  var emp=db.employees.find(function(e){return e.id===empId;});if(!emp)return;
+  var start=new Date(dateVal+'T09:00:00');
+  var end=new Date(start.getTime()+hours*3600000);
+  db.records.push({id:Date.now(),employeeId:emp.id,employeeName:emp.name,categoryId:otTaskData.categoryId,categoryName:otTaskData.categoryName,categoryIcon:otTaskData.categoryIcon,subId:otTaskData.subId,subName:otTaskData.subName,task:otTaskData.task,startTime:start.toISOString(),endTime:end.toISOString(),manual:true,overtime:true,negative:false});
+  document.getElementById('m-overtime').classList.add('hidden');
+  persist();renderCalendar();renderHistorial();if(currentTab==='semana')renderSemana();
+}
+function toggleActionMenu(){
+  var d=document.getElementById('action-dropdown');
+  d.classList.toggle('hidden');
+  if(!d.classList.contains('hidden')){
+    setTimeout(function(){document.addEventListener('click',closeActionMenuOutside,{once:true});},0);
+  }
+}
+function closeActionMenu(){document.getElementById('action-dropdown').classList.add('hidden');}
+function closeActionMenuOutside(e){if(!e.target.closest('.action-menu-wrap'))closeActionMenu();}
+
 function openVacModal(){
   document.getElementById('vac-emp').innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('');
   var now=todayISO();
@@ -684,7 +774,7 @@ function renderWeekCards(recs){
     if(wh===0&&!erecs.length)continue;
     var pct=Math.min(100,Math.round(wh/GOAL*100));var cls='';var fc='var(--border2)';
     var breakdown={};
-    erecs.forEach(function(r){var k=r.categoryName+' / '+r.subName+' / '+r.task;var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);});
+    erecs.forEach(function(r){var k=fmtActivity(r);var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);});
     var rows='';for(var k in breakdown){var v=breakdown[k];rows+='<div class="week-row"><span class="week-row-label">'+k+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
     html+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div><div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div><div class="week-goal">Objetivo: '+GOAL+'h — '+pct+'%</div><div class="week-prog"><div class="week-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin registros</div>')+'</div>';
   }
@@ -722,7 +812,7 @@ function renderDayPanel(key){
         var cls=wh>8?'over':'';
         var fc=wh>8?'#f87171':'var(--border2)';
         var breakdown={};
-        erecs.forEach(function(r){var k=r.categoryName+' / '+r.subName+' / '+r.task;var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);});
+        erecs.forEach(function(r){var k=fmtActivity(r);var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);});
         var rows='';for(var bk in breakdown){var v=breakdown[bk];rows+='<div class="week-row"><span class="week-row-label">'+bk+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
         dayCardsHtml+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div>'
           +'<div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div>'
@@ -734,7 +824,7 @@ function renderDayPanel(key){
 
     var recRows=recs.length?recs.map(function(r){
       var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;var col=r.negative?'#f87171':'var(--text)';
-      return '<div class="day-record"><div><div style="font-size:13px">'+r.employeeName+'</div><div class="day-record-info">'+r.categoryName+' / '+r.subName+' / '+r.task+'</div><div class="day-record-info">'+fmtTime(r.startTime)+' → '+fmtTime(r.endTime)+'</div></div>'
+      return '<div class="day-record"><div><div style="font-size:13px">'+r.employeeName+'</div><div class="day-record-info">'+fmtActivity(r)+'</div><div class="day-record-info">'+fmtTime(r.startTime)+' → '+fmtTime(r.endTime)+'</div></div>'
         +'<div style="display:flex;align-items:center;gap:10px"><button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:6px 10px;white-space:nowrap">Editar</button>'
         +'<div class="day-record-hours" style="color:'+col+'">'+(r.negative?'−':'')+Math.abs(delta).toFixed(1)+'h</div></div></div>';
     }).join(''):'<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros este día.</div>';
@@ -875,11 +965,20 @@ function confirmHours(){
 }
 
 var editingRecordId=null;
+function deleteRecord(recId){
+  var rec=db.records.find(function(r){return r.id===recId;});
+  if(!rec)return;
+  var label=rec.employeeName+' · '+fmtActivity(rec)+' · '+fmtDate(rec.startTime);
+  if(!confirm('¿Eliminar este registro?\n\n'+label))return;
+  db.records=db.records.filter(function(r){return r.id!==recId;});
+  persist();if(selectedDay)renderDayPanel(selectedDay);renderCalendar();renderHistorial();
+}
+
 function openEditRecordModal(recId){
   var rec=db.records.find(function(r){return r.id===recId;});if(!rec||!rec.endTime)return;
   editingRecordId=recId;var h=durH(rec.startTime,rec.endTime);
   document.getElementById('mer-title').textContent='Editar — '+rec.employeeName;
-  document.getElementById('mer-info').textContent=rec.categoryName+' / '+rec.subName+' / '+rec.task+'  ·  '+fmtDate(rec.startTime)+' · '+fmtTime(rec.startTime)+' → '+fmtTime(rec.endTime);
+  document.getElementById('mer-info').textContent=fmtActivity(rec)+'  ·  '+fmtDate(rec.startTime)+' · '+fmtTime(rec.startTime)+' → '+fmtTime(rec.endTime);
   document.getElementById('mer-hours').value=h.toFixed(2);merUpdatePreview(rec);
   document.getElementById('mer-hours').oninput=function(){merUpdatePreview(rec);};
   document.getElementById('m-edit-record').classList.remove('hidden');
@@ -919,6 +1018,15 @@ function openStep3(){
       var ti=parseInt(this.getAttribute('data-ti'));
       var empId=mEmp.id,empName=mEmp.name,catId=mCat.id,catName=mCat.name,catIcon=mCat.icon||'',subId=mSub.id,subName=mSub.name,task=mSub.tasks[ti];
       closeAllModals();
+      if(otMode){
+        otMode=false;
+        otTaskData={categoryId:catId,categoryName:catName,categoryIcon:catIcon,subId:subId,subName:subName,task:task};
+        var disp=document.getElementById('ot-task-display');
+        disp.textContent=catName+' / '+subName+' / '+task;
+        disp.style.color='var(--text)';
+        document.getElementById('m-overtime').classList.remove('hidden');
+        return;
+      }
       db.records.push({id:Date.now(),employeeId:empId,employeeName:empName,categoryId:catId,categoryName:catName,categoryIcon:catIcon,subId:subId,subName:subName,task:task,startTime:nowISO(),endTime:null});
       persist();
     });
@@ -946,7 +1054,7 @@ function renderFichaje(){
     var btn=active?'<button class="ficha-btn salida" onclick="registrarSalida('+emp.id+')">Registrar salida</button>':'<button class="ficha-btn entrada" onclick="openFichajeModal('+emp.id+')">Registrar entrada</button>';
     html+='<div class="card '+(active?'checked':'')+'"><div class="card-header"><div class="card-initials">'+initials+'</div><div class="card-dot '+(active?'in':'out')+'"></div></div>'
       +'<div><div class="card-name">'+emp.name+'</div><div class="card-role">'+emp.role+'</div></div>'
-      +(active?'<div><div class="card-task">'+active.categoryName+' / '+active.subName+' / '+active.task+'</div></div>':'')
+      +(active?'<div><div class="card-task">'+fmtActivity(active)+'</div></div>':'')
       +'<div class="card-meta"><div class="card-hours">'+wh.toFixed(1)+'h de '+GOAL+'h — '+pct+'%</div><div class="prog-bg"><div class="prog-fill" style="width:'+pct+'%;background:'+fillColor+'"></div></div></div>'+btn+'</div>';
   }
   document.getElementById('grid').innerHTML=html||'<div style="padding:32px;color:var(--muted);font-size:12px;letter-spacing:1px">Sin empleados.</div>';
@@ -956,10 +1064,10 @@ function renderSemana(){
   var mon=getMonday(),sun=new Date(mon);sun.setDate(mon.getDate()+6);
   var html='<div class="section-title">Semana '+mon.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})+' — '+sun.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})+'</div><div class="week-grid">';
   for(var i=0;i<db.employees.length;i++){
-    var emp=db.employees[i],wh=weekHours(emp.id);var pct=Math.min(100,Math.round(wh/GOAL*100));var cls='';var fc='var(--border2)';
-    var breakdown={};for(var j=0;j<db.records.length;j++){var r=db.records[j];if(r.employeeId===emp.id&&r.endTime&&inThisWeek(r.startTime)){var k=r.categoryName+' / '+r.subName+' / '+r.task;var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);}}
+    var emp=db.employees[i],wh=weekHours(emp.id);var oth=overtimeWeekHours(emp.id);var pct=Math.min(100,Math.round(wh/GOAL*100));var cls='';var fc='var(--border2)';
+    var breakdown={};for(var j=0;j<db.records.length;j++){var r=db.records[j];if(r.employeeId===emp.id&&r.endTime&&inThisWeek(r.startTime)){var k=fmtActivity(r);var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);}}
     var rows='';for(var k in breakdown){var v=breakdown[k];rows+='<div class="week-row"><span class="week-row-label">'+k+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
-    html+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div><div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div><div class="week-goal">Objetivo: '+GOAL+'h — '+pct+'%</div><div class="week-prog"><div class="week-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin registros esta semana</div>')+'</div>';
+    html+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div><div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div><div class="week-goal">Objetivo: '+GOAL+'h — '+pct+'%</div><div class="week-prog"><div class="week-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+(oth>0?'<div style="font-size:11px;color:#a78bfa;letter-spacing:1px;margin-top:4px">+ '+oth.toFixed(1)+'h extras</div>':'')+(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin registros esta semana</div>')+'</div>';
   }
   html+='</div>'+renderWeekExportSection();
   document.getElementById('semana-content').innerHTML=html;
@@ -1493,9 +1601,9 @@ function renderHistorial(){
   var visibleRecs=historialShowAll?recs:recs.slice(0,10);
   var rows=visibleRecs.map(function(r){
     var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'Activo';var durColor=r.negative?'#f87171':r.endTime?'var(--text)':'#4ade80';
-    var tag='';if(r.manual&&!r.negative)tag='<span style="font-size:9px;color:var(--muted2);letter-spacing:1px;margin-left:6px">MANUAL</span>';if(r.negative)tag='<span style="font-size:9px;color:#f87171;letter-spacing:1px;margin-left:6px">− AJUSTE</span>';
-    var editBtn=r.endTime&&!r.negative?'<button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:5px 10px">Editar</button>':'<span></span>';
-    return '<div class="tbl-row" style="grid-template-columns:'+cols+'"><span style="font-size:13px">'+r.employeeName+tag+'</span><span style="font-size:12px;color:var(--muted)">'+r.categoryName+' / '+r.subName+' / '+r.task+'</span><span style="font-size:11px;color:var(--muted2)">'+fmtDate(r.startTime)+(r.endTime?' · '+fmtTime(r.startTime):' · en curso')+'</span>'+editBtn+'<span style="font-size:13px;color:'+durColor+';text-align:right">'+(r.negative?'−':'')+dur+'</span></div>';
+    var tag='';if(r.overtime)tag='<span class="tag-extra">EXTRA</span>';else if(r.manual&&!r.negative)tag='<span style="font-size:9px;color:var(--muted2);letter-spacing:1px;margin-left:6px">MANUAL</span>';if(r.negative)tag='<span style="font-size:9px;color:#f87171;letter-spacing:1px;margin-left:6px">− AJUSTE</span>';
+    var editBtn=r.endTime&&!r.negative?'<div style="display:flex;gap:6px;align-items:center"><button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:5px 10px">Editar</button><span onclick="deleteRecord('+r.id+')" style="cursor:pointer;font-size:13px;color:var(--muted2);padding:4px 6px" onmouseover="this.style.color=\'#f87171\'" onmouseout="this.style.color=\'var(--muted2)\'">✕</span></div>':'<span></span>';
+    return '<div class="tbl-row" style="grid-template-columns:'+cols+'"><span style="font-size:13px">'+r.employeeName+tag+'</span><span style="font-size:12px;color:var(--muted)">'+fmtActivity(r)+'</span><span style="font-size:11px;color:var(--muted2)">'+fmtDate(r.startTime)+(r.endTime?' · '+fmtTime(r.startTime):' · en curso')+'</span>'+editBtn+'<span style="font-size:13px;color:'+durColor+';text-align:right">'+(r.negative?'−':'')+dur+'</span></div>';
   }).join('');
   var verMasBtn=(!historialShowAll&&recs.length>10)?'<div style="padding:16px 24px;border-top:1px solid var(--border)"><button onclick="historialShowAll=true;renderHistorial()" style="background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:\'PPNeueMontreal\',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor=\'var(--text)\';this.style.color=\'var(--text)\'" onmouseout="this.style.borderColor=\'var(--border2)\';this.style.color=\'var(--muted)\'">Ver más ('+(recs.length-10)+' registros)</button></div>':'';
   document.getElementById('hist-content').innerHTML='<div class="tbl"><div class="tbl-head" style="grid-template-columns:'+cols+'"><span>Empleado</span><span>Actividad</span><span>Fecha</span><span></span><span style="text-align:right">Horas</span></div>'+rows+'</div>'+verMasBtn;

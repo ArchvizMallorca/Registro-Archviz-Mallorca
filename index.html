@@ -1192,12 +1192,10 @@ function buildPeriodPDF(recs,periodLabel){
     var pct=Math.min(100,Math.round(total/GOAL*100));
     var barColor=total>=GOAL?'#38a169':total>=20?'#d69e2e':'#aaa';
     empSections+='<div style="margin-bottom:52px;page-break-inside:avoid">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:2px solid #111;margin-bottom:16px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:2px solid #111;margin-bottom:24px">'
       +'<div><span style="font-size:20px;font-weight:600;letter-spacing:1px">'+emp.name+'</span>'
       +'<span style="font-size:12px;color:#888;margin-left:10px;text-transform:uppercase;letter-spacing:1px">'+emp.role+'</span></div>'
       +'<div style="font-size:32px;font-weight:300">'+total.toFixed(1)+'<span style="font-size:14px;color:#888;margin-left:2px">h</span></div></div>'
-      +'<div style="height:6px;background:#eee;border-radius:3px;margin-bottom:6px"><div style="height:6px;width:'+pct+'%;background:'+barColor+';border-radius:3px"></div></div>'
-      +'<div style="font-size:11px;color:#aaa;margin-bottom:24px;letter-spacing:1px">'+pct+'% del objetivo semanal ('+GOAL+'h)</div>'
       +catHTML+'</div>';
   }
   if(!hasAny){alert('No hay registros para ese período.');return;}

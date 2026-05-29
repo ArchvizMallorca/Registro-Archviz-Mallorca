@@ -22,7 +22,7 @@
 body{font-family:'PPNeueMontreal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-weight:300;letter-spacing:0.01em}
 header{background:var(--bg);border-bottom:1px solid var(--border);padding:0 40px;position:sticky;top:0;z-index:10;display:flex;flex-direction:column}
 .header-top{display:flex;justify-content:space-between;align-items:center;padding:20px 0 16px}
-.logo{font-size:13px;font-weight:400;color:var(--text);letter-spacing:2px;text-transform:uppercase}
+.logo{font-size:19px;font-weight:500;color:var(--text);letter-spacing:0.5px;text-transform:none}
 .status-area{display:flex;align-items:center;gap:12px}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block}
 .sync-dot.green{background:#4ade80}.sync-dot.yellow{background:#fbbf24;animation:pulse 1.5s infinite}.sync-dot.red{background:#f87171}
@@ -66,7 +66,7 @@ main{padding:40px;max-width:1100px;margin:0 auto}
 .bc{font-size:11px;color:var(--muted2);letter-spacing:1px;margin-bottom:12px}
 .tbl{border:1px solid var(--border);background:var(--bg);margin-bottom:1px}
 .tbl-head{display:grid;padding:12px 24px;font-size:10px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);gap:12px;align-items:center}
-.tbl-row{display:grid;padding:16px 24px;font-size:13px;border-bottom:1px solid var(--border);gap:12px;align-items:center;transition:background .15s}
+.tbl-row{display:grid;padding:16px 24px;font-size:13px;border-bottom:1px solid var(--border);gap:12px;align-items:start;transition:background .15s}
 .tbl-row:hover{background:var(--bg2)}.tbl-row:last-child{border-bottom:none}
 @media(max-width:640px){
   .tbl-head{display:none!important}
@@ -1486,7 +1486,7 @@ function confirmMoveProj(){
 }
 
 var cptMode='week'; // 'week' or 'month'
-var historialShowAll=false;
+var histDisplayCount=10;
 
 function onFPeriodChange(){
   var period=document.getElementById('f-period')?document.getElementById('f-period').value:'all';
@@ -1495,7 +1495,7 @@ function onFPeriodChange(){
   if(cw)cw.style.display=period==='custom'?'block':'none';
   if(ns)ns.style.display=period==='custom'?'none':'block';
   if(period==='custom') populateCPTSelectors();
-  historialShowAll=false;
+  histDisplayCount=10;
   renderHistorial();
 }
 
@@ -1596,15 +1596,30 @@ function renderHistorial(){
   if(se){se.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:24px 32px;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:16px;align-items:flex-end"><div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Registros</div><div style="font-size:22px;font-weight:300">'+recs.length+'</div></div><div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Horas totales</div><div style="font-size:22px;font-weight:300">'+totalH.toFixed(1)+'h</div></div>'+(active?'<div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Activos</div><div style="font-size:22px;font-weight:300;color:#4ade80">'+active+'</div></div>':'')+'<div style="margin-left:auto;display:flex;gap:8px;align-items:center"><button class="btn b-edit" onclick="exportCSV()" style="font-size:10px;letter-spacing:2px;padding:10px 16px">Exportar CSV</button><button class="btn b-edit" onclick="smartExportPDF()" style="font-size:10px;letter-spacing:2px;padding:10px 16px">Exportar PDF</button></div></div>';}
   if(!recs.length){document.getElementById('hist-content').innerHTML='<div style="color:var(--muted);font-size:12px;letter-spacing:1px;padding:32px 0">Sin registros para los filtros seleccionados.</div>';return;}
   var cols='1.5fr 2fr 1fr auto 60px';
-  var visibleRecs=historialShowAll?recs:recs.slice(0,10);
+  var isAll=histDisplayCount>=recs.length;
+  var visibleRecs=recs.slice(0,histDisplayCount);
+  var btnStyle='background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:\'PPNeueMontreal\',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;transition:all .2s';
+  var btnHover='onmouseover="this.style.borderColor=\'var(--text)\';this.style.color=\'var(--text)\'" onmouseout="this.style.borderColor=\'var(--border2)\';this.style.color=\'var(--muted)\'"';
+  var pagination='';
+  if(recs.length>10){
+    var btns='';
+    if(!isAll){
+      btns+='<button style="'+btnStyle+'" '+btnHover+' onclick="histDisplayCount=Math.min(histDisplayCount+10,'+recs.length+');renderHistorial()">+ Ver 10 más</button>';
+      btns+='<button style="'+btnStyle+';margin-left:8px" '+btnHover+' onclick="histDisplayCount='+recs.length+';renderHistorial()">Ver todos</button>';
+    }
+    if(histDisplayCount>10){
+      btns+='<button style="'+btnStyle+';margin-left:8px" '+btnHover+' onclick="histDisplayCount=Math.max(10,histDisplayCount-10);renderHistorial()">− Esconder 10</button>';
+      if(isAll)btns+='<button style="'+btnStyle+';margin-left:8px" '+btnHover+' onclick="histDisplayCount=10;renderHistorial()">Esconder todo</button>';
+    }
+    pagination='<div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;align-items:center">'+btns+'<span style="font-size:11px;color:var(--muted2);margin-left:8px">'+Math.min(histDisplayCount,recs.length)+' de '+recs.length+' registros</span></div>';
+  }
   var rows=visibleRecs.map(function(r){
     var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'Activo';var durColor=r.negative?'#f87171':r.endTime?'var(--text)':'#4ade80';
     var tag='';if(r.overtime)tag='<span class="tag-extra">EXTRA</span>';else if(r.manual&&!r.negative)tag='<span style="font-size:9px;color:var(--muted2);letter-spacing:1px;margin-left:6px">MANUAL</span>';if(r.negative)tag='<span style="font-size:9px;color:#f87171;letter-spacing:1px;margin-left:6px">− AJUSTE</span>';
     var editBtn=r.endTime&&!r.negative?'<div style="display:flex;gap:6px;align-items:center"><button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:5px 10px">Editar</button><span onclick="deleteRecord('+r.id+')" style="cursor:pointer;font-size:13px;color:var(--muted2);padding:4px 6px" onmouseover="this.style.color=\'#f87171\'" onmouseout="this.style.color=\'var(--muted2)\'">✕</span></div>':'<span></span>';
     return '<div class="tbl-row" style="grid-template-columns:'+cols+'"><span style="font-size:13px">'+r.employeeName+tag+'</span><span style="font-size:12px;color:var(--muted)">'+fmtActivity(r)+'</span><span style="font-size:11px;color:var(--muted2)">'+fmtDate(r.startTime)+(r.endTime?' · '+fmtTime(r.startTime):' · en curso')+'</span>'+editBtn+'<span style="font-size:13px;color:'+durColor+';text-align:right">'+(r.negative?'−':'')+dur+'</span></div>';
   }).join('');
-  var verMasBtn=(!historialShowAll&&recs.length>10)?'<div style="padding:16px 24px;border-top:1px solid var(--border)"><button onclick="historialShowAll=true;renderHistorial()" style="background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:\'PPNeueMontreal\',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor=\'var(--text)\';this.style.color=\'var(--text)\'" onmouseout="this.style.borderColor=\'var(--border2)\';this.style.color=\'var(--muted)\'">Ver más ('+(recs.length-10)+' registros)</button></div>':'';
-  document.getElementById('hist-content').innerHTML='<div class="tbl"><div class="tbl-head" style="grid-template-columns:'+cols+'"><span>Empleado</span><span>Actividad</span><span>Fecha</span><span></span><span style="text-align:right">Horas</span></div>'+rows+'</div>'+verMasBtn;
+  document.getElementById('hist-content').innerHTML='<div class="tbl"><div class="tbl-head" style="grid-template-columns:'+cols+'"><span>Empleado</span><span>Actividad</span><span>Fecha</span><span></span><span style="text-align:right">Horas</span></div>'+rows+'</div>'+pagination;
 }
 
 function renderConfig(){

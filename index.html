@@ -1684,5 +1684,39 @@ document.addEventListener('click',function(e){
   }
 });
 </script>
+
+<!-- BIRTHDAY PARADE -->
+<canvas id="bday-canvas" style="display:none;position:fixed;bottom:0;left:0;width:100%;height:120px;pointer-events:none;z-index:9999"></canvas>
+<script>
+(function(){
+  function isBirthday(){var n=new Date();return n.getMonth()===5&&n.getDate()===4;}
+  var canvas=document.getElementById('bday-canvas');
+  var ctx=canvas.getContext('2d');
+  var W=0,H=120,rafId=null,last=null;
+  var conf=[];
+  var COLORS=['#f39c12','#e74c3c','#9b59b6','#3498db','#2ecc71','#e91e63','#ff5722','#00bcd4','#f1c40f','#1abc9c'];
+  function initScene(){
+    W=window.innerWidth;canvas.width=W;canvas.height=H;
+    conf=[];for(var i=0;i<90;i++){conf.push({x:Math.random()*W,y:Math.random()*H,w:5+Math.random()*8,h:3+Math.random()*5,c:COLORS[i%COLORS.length],a:Math.random()*360,vx:(Math.random()-0.5)*1.5,vy:-0.3-Math.random()*0.9,va:(Math.random()-0.5)*3.5});}
+  }
+  function frame(ts){
+    rafId=requestAnimationFrame(frame);
+    var dt=last?Math.min((ts-last)/1000,0.05):0.016;last=ts;
+    ctx.clearRect(0,0,W,H);
+    conf.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.a+=p.va;if(p.y<-10){p.y=H;p.x=Math.random()*W;}if(p.x<-10)p.x=W;if(p.x>W+10)p.x=0;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a*Math.PI/180);ctx.fillStyle=p.c;ctx.globalAlpha=0.85;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+    ctx.save();
+    ctx.font='700 28px PPNeueMontreal, Inter, sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillText('Molts d\'anys Joanmi \uD83C\uDF82',W/2+2,H/2+2);
+    ctx.fillStyle='#ffffff';ctx.fillText('Molts d\'anys Joanmi \uD83C\uDF82',W/2,H/2);
+    ctx.restore();
+  }
+  function show(){if(canvas.style.display==='block')return;canvas.style.display='block';initScene();last=null;rafId=requestAnimationFrame(frame);}
+  function hide(){canvas.style.display='none';if(rafId){cancelAnimationFrame(rafId);rafId=null;last=null;}}
+  function check(){var onReg=(typeof currentTab==='undefined'||currentTab==='fichaje');if(isBirthday()&&onReg){show();}else{hide();}}
+  window.addEventListener('resize',function(){if(canvas.style.display==='block'){W=window.innerWidth;canvas.width=W;}});
+  setTimeout(check,1000);setInterval(check,2000);
+})();
+</script>
 </body>
 </html>

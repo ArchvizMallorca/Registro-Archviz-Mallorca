@@ -2,8 +2,22 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>Ficha Archviz Mallorca</title>
+
+<!-- Favicon -->
+<link rel="icon" href="icons/favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png"/>
+<!-- Web App / instalable en móvil -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#111111"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="apple-mobile-web-app-title" content="Fichaje"/>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 
 <style>
 @font-face{font-family:'PPNeueMontreal';src:url('ppneuemontreal-thin.otf') format('opentype');font-weight:100;font-style:normal}
@@ -490,6 +504,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
 <script>
 var firebaseConfig={apiKey:"AIzaSyCTLHLZOLAHUG-5Q-WQCmaTKFGH9PeOHuw",authDomain:"registro-horas-archviz.firebaseapp.com",databaseURL:"https://registro-horas-archviz-default-rtdb.europe-west1.firebasedatabase.app",projectId:"registro-horas-archviz",storageBucket:"registro-horas-archviz.firebasestorage.app",messagingSenderId:"144534709826",appId:"1:144534709826:web:7b9d189ce16376b6b1efdb",measurementId:"G-FKSZQK4E9J"};
 
@@ -532,18 +547,28 @@ function sanitize(raw){
   return{employees:emps,categories:cats,records:recs,notes:raw.notes&&typeof raw.notes==='object'?raw.notes:{},vacations:vacs,projectMeta:raw.projectMeta&&typeof raw.projectMeta==='object'?raw.projectMeta:{},clientFolders:Array.isArray(raw.clientFolders)?raw.clientFolders:Object.values(raw.clientFolders||{}),folderOpen:raw.folderOpen&&typeof raw.folderOpen==='object'?raw.folderOpen:{}};
 }
 
+function attachData(){
+  if(fbRef)return;
+  fbRef=firebase.database().ref('fichajeapp');
+  fbRef.on('value',function(snap){
+    if(saving)return;
+    var val=snap.val();
+    if(val){db=sanitize(val);}else{fbRef.set(clone(DEFAULT));db=clone(DEFAULT);}
+    if(!fbReady){fbReady=true;document.getElementById('loading').classList.add('hidden');document.getElementById('app').classList.remove('hidden');}
+    setStatus('online');render(true);
+  },function(){fbRef=null;fallbackLocal();});
+}
 function initFirebase(){
   try{
     firebase.initializeApp(firebaseConfig);
-    fbRef=firebase.database().ref('fichajeapp');
-    fbRef.on('value',function(snap){
-      if(saving)return;
-      var val=snap.val();
-      if(val){db=sanitize(val);}else{fbRef.set(clone(DEFAULT));db=clone(DEFAULT);}
-      if(!fbReady){fbReady=true;document.getElementById('loading').classList.add('hidden');document.getElementById('app').classList.remove('hidden');}
-      setStatus('online');render(true);
-    },function(){fallbackLocal();});
-    setTimeout(function(){if(!fbReady)fallbackLocal();},4000);
+    try{
+      // Login anónimo invisible: permite cerrar las reglas (auth != null).
+      firebase.auth().onAuthStateChanged(function(u){if(u)attachData();});
+      firebase.auth().signInAnonymously().catch(function(){attachData();});
+    }catch(e){attachData();}
+    // Red de seguridad: si el login tarda o no está activado, conectamos igual.
+    setTimeout(function(){if(!fbReady)attachData();},2500);
+    setTimeout(function(){if(!fbReady)fallbackLocal();},6000);
   }catch(e){fallbackLocal();}
 }
 

@@ -491,7 +491,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
 <script>
-var firebaseConfig={apiKey:"AIzaSyCTLHLZOLAHUG-5Q-WQCmaTKFGH9PeOHuw",authDomain:"registro-horas-archviz.firebaseapp.com",databaseURL:"https://registro-horas-archviz-default-rtdb.europe-west1.firebasedatabase.app",projectId:"registro-horas-archviz",storageBucket:"registro-horas-archviz.firebasestorage.app",messagingSenderId:"144534709826",appId:"1:144534709826:web:7b9d189ce16376b6b1efdb",measurementId:"G-FKSZQK4E9J"};
+var firebaseConfig={apiKey:"AIzaSyAQaTltoAY7O33gUwL3WoYZt6a5ze1_408",authDomain:"registro-a66fa.firebaseapp.com",databaseURL:"https://registro-a66fa-default-rtdb.europe-west1.firebasedatabase.app",projectId:"registro-a66fa",storageBucket:"registro-a66fa.firebasestorage.app",messagingSenderId:"3694299435",appId:"1:3694299435:web:fa5dacd2a11e6697e6dd6e"};
 
 var DEFAULT={employees:[{id:1,name:'Ana García',role:'Diseñadora'},{id:2,name:'Carlos López',role:'Desarrollador'},{id:3,name:'Marta Ruiz',role:'Product Manager'}],categories:[{id:'c1',name:'Proyectos',icon:'',subs:[{id:'c1s1',name:'Proyecto A',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']},{id:'c1s2',name:'Proyecto B',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']},{id:'c1s3',name:'Proyecto C',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']}]},{id:'c2',name:'Reuniones',icon:'',subs:[{id:'c2s1',name:'Interna',tasks:['Planificación','Seguimiento','Formación']},{id:'c2s2',name:'Cliente',tasks:['Presentación','Revisión','Feedback']}]},{id:'c3',name:'Administración',icon:'',subs:[{id:'c3s1',name:'Gestión',tasks:['Facturas','Presupuestos','Contratos']},{id:'c3s2',name:'RRHH',tasks:['Nóminas','Formación','Evaluaciones']}]}],records:[],notes:{},vacations:[],projectMeta:{},clientFolders:[],folderOpen:{}};
 
@@ -1713,50 +1713,6 @@ function delVac(idx){if(!confirm('¿Eliminar estas vacaciones?'))return;cfgState
 function exportCSV(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var hdr='Empleado,Categoría,Subcategoría,Tarea,Fecha,Entrada,Salida,Horas,Tipo\n',body=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(2):'';var tipo=r.negative?'Ajuste negativo':r.manual?'Manual':'Fichaje';return '"'+r.employeeName+'","'+r.categoryName+'","'+r.subName+'","'+r.task+'","'+fmtDate(r.startTime)+'","'+fmtTime(r.startTime)+'","'+(r.endTime?fmtTime(r.endTime):'activo')+'","'+dur+'","'+tipo+'"';}).join('\n');var blob=new Blob(['\uFEFF'+hdr+body],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fichajes_'+today().replace(/\//g,'-')+'.csv';a.click();}
 function exportPDF(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var win=window.open('','_blank'),rows=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'activo';return '<tr><td>'+r.employeeName+'</td><td>'+r.categoryName+' / '+r.subName+'</td><td>'+r.task+'</td><td>'+fmtDate(r.startTime)+' '+fmtTime(r.startTime)+'</td><td>'+(r.endTime?fmtTime(r.endTime):'—')+'</td><td>'+(r.negative?'−':'')+dur+'</td></tr>';}).join('');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial</title><style>body{font-family:PPNeueMontreal,sans-serif;padding:40px;color:#111;background:#fff}h1{font-size:24px;font-weight:300;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:32px}table{width:100%;border-collapse:collapse;font-size:13px}th{border-bottom:1px solid #111;padding:10px 0;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:400}td{padding:12px 0;border-bottom:1px solid #eee}@media print{button{display:none}}</style></head><body><h1>Fichaje — Archviz Mallorca</h1><p>'+today()+' · '+recs.length+' registros</p><table><thead><tr><th>Empleado</th><th>Área</th><th>Tarea</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>'+rows+'</tbody></table><br><button onclick="window.print()" style="margin-top:24px;padding:12px 24px;border:1px solid #111;background:transparent;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / PDF</button></body></html>');win.document.close();}
 
-initFirebase();
+/* MODO PRUEBA: Firebase desconectado, solo local */ fallbackLocal();
 
-// Close dp dropdown on outside click
-document.addEventListener('click',function(e){
-  var dd=document.getElementById('dp-dd');if(!dd)return;
-  if(!dd.contains(e.target)&&e.target.id!=='dp-btn'&&!e.target.closest('#dp-btn')){
-    dd.classList.remove('open');
-    var ch=document.getElementById('dp-ch');if(ch)ch.classList.remove('open');
-  }
-});
-</script>
-
-<!-- BIRTHDAY PARADE -->
-<canvas id="bday-canvas" style="display:none;position:fixed;bottom:0;left:0;width:100%;height:120px;pointer-events:none;z-index:9999"></canvas>
-<script>
-(function(){
-  function isBirthday(){var n=new Date();return n.getMonth()===5&&n.getDate()===4;}
-  var canvas=document.getElementById('bday-canvas');
-  var ctx=canvas.getContext('2d');
-  var W=0,H=120,rafId=null,last=null;
-  var conf=[];
-  var COLORS=['#f39c12','#e74c3c','#9b59b6','#3498db','#2ecc71','#e91e63','#ff5722','#00bcd4','#f1c40f','#1abc9c'];
-  function initScene(){
-    W=window.innerWidth;canvas.width=W;canvas.height=H;
-    conf=[];for(var i=0;i<90;i++){conf.push({x:Math.random()*W,y:Math.random()*H,w:5+Math.random()*8,h:3+Math.random()*5,c:COLORS[i%COLORS.length],a:Math.random()*360,vx:(Math.random()-0.5)*1.5,vy:-0.3-Math.random()*0.9,va:(Math.random()-0.5)*3.5});}
-  }
-  function frame(ts){
-    rafId=requestAnimationFrame(frame);
-    var dt=last?Math.min((ts-last)/1000,0.05):0.016;last=ts;
-    ctx.clearRect(0,0,W,H);
-    conf.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.a+=p.va;if(p.y<-10){p.y=H;p.x=Math.random()*W;}if(p.x<-10)p.x=W;if(p.x>W+10)p.x=0;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a*Math.PI/180);ctx.fillStyle=p.c;ctx.globalAlpha=0.85;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
-    ctx.save();
-    ctx.font='700 28px PPNeueMontreal, Inter, sans-serif';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillText('Molts d\'anys Joanmi \uD83C\uDF82',W/2+2,H/2+2);
-    ctx.fillStyle='#ffffff';ctx.fillText('Molts d\'anys Joanmi \uD83C\uDF82',W/2,H/2);
-    ctx.restore();
-  }
-  function show(){if(canvas.style.display==='block')return;canvas.style.display='block';initScene();last=null;rafId=requestAnimationFrame(frame);}
-  function hide(){canvas.style.display='none';if(rafId){cancelAnimationFrame(rafId);rafId=null;last=null;}}
-  function check(){var onReg=(typeof currentTab==='undefined'||currentTab==='fichaje');if(isBirthday()&&onReg){show();}else{hide();}}
-  window.addEventListener('resize',function(){if(canvas.style.display==='block'){W=window.innerWidth;canvas.width=W;}});
-  setTimeout(check,1000);setInterval(check,2000);
-})();
-</script>
-</body>
-</html>
+// 

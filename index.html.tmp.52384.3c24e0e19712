@@ -523,9 +523,7 @@ var DOWS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 
 function nowISO(){return new Date().toISOString();}
 function today(){return new Date().toLocaleDateString('es-ES');}
-function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-// Día local (YYYY-MM-DD) de una fecha ISO: evita que un fichaje de madrugada salga en el día equivocado.
-function localDay(iso){var d=new Date(iso);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function todayISO(){return new Date().toISOString().slice(0,10);}
 function fmtDate(i){return new Date(i).toLocaleDateString('es-ES');}
 function fmtTime(i){return new Date(i).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
 function durH(a,b){return Math.round((new Date(b)-new Date(a))/36000)/100;}
@@ -695,7 +693,7 @@ function openOTModal(){
   otTaskData=null;
   document.getElementById('m-overtime').classList.remove('hidden');
   var empSel=document.getElementById('ot-emp');
-  empSel.innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+esc(e.name)+'</option>';}).join('');
+  empSel.innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('');
   document.getElementById('ot-date').value=todayISO();
   document.getElementById('ot-hours').value='';
   document.getElementById('ot-task-display').textContent='Sin seleccionar';
@@ -718,10 +716,9 @@ function saveOT(){
   var emp=db.employees.find(function(e){return e.id===empId;});if(!emp)return;
   var start=new Date(dateVal+'T09:00:00');
   var end=new Date(start.getTime()+hours*3600000);
-  var rec={id:Date.now(),employeeId:emp.id,employeeName:emp.name,categoryId:otTaskData.categoryId,categoryName:otTaskData.categoryName,categoryIcon:otTaskData.categoryIcon,subId:otTaskData.subId,subName:otTaskData.subName,task:otTaskData.task,startTime:start.toISOString(),endTime:end.toISOString(),manual:true,overtime:true,negative:false};
-  db.records.push(rec);
+  db.records.push({id:Date.now(),employeeId:emp.id,employeeName:emp.name,categoryId:otTaskData.categoryId,categoryName:otTaskData.categoryName,categoryIcon:otTaskData.categoryIcon,subId:otTaskData.subId,subName:otTaskData.subName,task:otTaskData.task,startTime:start.toISOString(),endTime:end.toISOString(),manual:true,overtime:true,negative:false});
   document.getElementById('m-overtime').classList.add('hidden');
-  persistAddRecord(rec);renderCalendar();renderHistorial();
+  persist();renderCalendar();renderHistorial();if(currentTab==='semana')renderSemana();
 }
 function toggleActionMenu(){
   var d=document.getElementById('action-dropdown');
@@ -734,7 +731,7 @@ function closeActionMenu(){document.getElementById('action-dropdown').classList.
 function closeActionMenuOutside(e){if(!e.target.closest('.action-menu-wrap'))closeActionMenu();}
 
 function openVacModal(){
-  document.getElementById('vac-emp').innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+esc(e.name)+'</option>';}).join('');
+  document.getElementById('vac-emp').innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('');
   var now=todayISO();
   document.getElementById('vac-from').value=now;
   document.getElementById('vac-to').value=now;
@@ -765,10 +762,10 @@ function vacationsOnDay(dateStr){
 
 /* ── CALENDAR ── */
 function dayKey(y,m,d){return y+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d);}
-function dayHours(ds){var t=0;for(var i=0;i<db.records.length;i++){var r=db.records[i];if(r.endTime&&localDay(r.startTime)===ds){var h=durH(r.startTime,r.endTime);t+=r.negative?-h:h;}}return Math.max(0,t);}
+function dayHours(ds){var t=0;for(var i=0;i<db.records.length;i++){var r=db.records[i];if(r.endTime&&r.startTime.slice(0,10)===ds){var h=durH(r.startTime,r.endTime);t+=r.negative?-h:h;}}return Math.max(0,t);}
 function dayHoursByEmployee(ds){
   var map={};
-  for(var i=0;i<db.records.length;i++){var r=db.records[i];if(r.endTime&&localDay(r.startTime)===ds){var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;if(!map[r.employeeId])map[r.employeeId]={name:r.employeeName,h:0};map[r.employeeId].h+=delta;}}
+  for(var i=0;i<db.records.length;i++){var r=db.records[i];if(r.endTime&&r.startTime.slice(0,10)===ds){var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;if(!map[r.employeeId])map[r.employeeId]={name:r.employeeName,h:0};map[r.employeeId].h+=delta;}}
   var res=[];for(var id in map){var hv=Math.max(0,map[id].h);if(hv>0){var ini=map[id].name.split(' ').map(function(n){return n[0];}).join('').toUpperCase();res.push(ini+' '+hv.toFixed(1)+'h');}}
   return res;
 }
@@ -791,9 +788,9 @@ function renderCalendar(){
     var vacs=vacationsOnDay(key);
     var pct=Math.min(100,h/8*100);
     var barColor=h>=8?'#4ade80':h>=4?'#fbbf24':'#555';
-    var vacHtml=vacs.length?'<div class="cal-vac-row">'+vacs.map(function(v){return '<span class="cal-vac-badge">'+ICON_VAC_SM+esc(v.initials)+'</span>';}).join('')+'</div>':'';
+    var vacHtml=vacs.length?'<div class="cal-vac-row">'+vacs.map(function(v){return '<span class="cal-vac-badge">'+ICON_VAC_SM+v.initials+'</span>';}).join('')+'</div>':'';
     html+='<div class="cal-day'+(key===todayStr?' today':'')+(key===selectedDay?' selected':'')+'" onclick="selectDay(\''+key+'\')"><div class="cal-day-num">'+d+'</div>'
-      +(empLines.length?'<div class="cal-day-hours" style="display:flex;flex-wrap:wrap;gap:2px 5px;">'+empLines.map(function(l){return '<span>'+esc(l)+'</span>';}).join('')+'</div>':'')
+      +(empLines.length?'<div class="cal-day-hours" style="display:flex;flex-wrap:wrap;gap:2px 5px;">'+empLines.map(function(l){return '<span>'+l+'</span>';}).join('')+'</div>':'')
       +(h>0?'<div class="cal-day-bar" style="background:'+barColor+';width:'+pct.toFixed(0)+'%"></div>':'')
       +vacHtml
       +(note?'<div class="cal-day-note-badge">Nota pendiente</div>':'')
@@ -879,8 +876,8 @@ function renderWeekCards(recs){
     var pct=Math.min(100,Math.round(wh/GOAL*100));var cls='';var fc='var(--border2)';
     var breakdown={};
     erecs.forEach(function(r){var k=fmtActivity(r);var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);});
-    var rows='';for(var k in breakdown){var v=breakdown[k];rows+='<div class="week-row"><span class="week-row-label">'+esc(k)+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
-    html+='<div class="week-card"><div><div class="week-name">'+esc(emp.name)+'</div><div class="week-role">'+esc(emp.role)+'</div></div><div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div><div class="week-goal">Objetivo: '+GOAL+'h — '+pct+'%</div><div class="week-prog"><div class="week-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin registros</div>')+'</div>';
+    var rows='';for(var k in breakdown){var v=breakdown[k];rows+='<div class="week-row"><span class="week-row-label">'+k+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
+    html+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div><div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div><div class="week-goal">Objetivo: '+GOAL+'h — '+pct+'%</div><div class="week-prog"><div class="week-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin registros</div>')+'</div>';
   }
   return html+'</div>';
 }
@@ -899,7 +896,7 @@ function renderDayPanel(key){
     +'</div></div>';
 
   if(mode==='day'){
-    var recs=db.records.filter(function(r){return localDay(r.startTime)===key&&r.endTime;});
+    var recs=db.records.filter(function(r){return r.startTime.slice(0,10)===key&&r.endTime;});
     var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
     var note=db.notes&&db.notes[key]?db.notes[key]:'';
     var vacs=vacationsOnDay(key);
@@ -917,8 +914,8 @@ function renderDayPanel(key){
         var fc=wh>8?'#f87171':'var(--border2)';
         var breakdown={};
         erecs.forEach(function(r){var k=fmtActivity(r);var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);});
-        var rows='';for(var bk in breakdown){var v=breakdown[bk];rows+='<div class="week-row"><span class="week-row-label">'+esc(bk)+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
-        dayCardsHtml+='<div class="week-card"><div><div class="week-name">'+esc(emp.name)+'</div><div class="week-role">'+esc(emp.role)+'</div></div>'
+        var rows='';for(var bk in breakdown){var v=breakdown[bk];rows+='<div class="week-row"><span class="week-row-label">'+bk+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
+        dayCardsHtml+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div>'
           +'<div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div>'
           +(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin desglose</div>')
           +'</div>';
@@ -928,7 +925,7 @@ function renderDayPanel(key){
 
     var recRows=recs.length?recs.map(function(r){
       var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;var col=r.negative?'#f87171':'var(--text)';
-      return '<div class="day-record"><div><div style="font-size:13px">'+esc(r.employeeName)+'</div><div class="day-record-info">'+esc(fmtActivity(r))+'</div><div class="day-record-info">'+fmtTime(r.startTime)+' → '+fmtTime(r.endTime)+'</div></div>'
+      return '<div class="day-record"><div><div style="font-size:13px">'+r.employeeName+'</div><div class="day-record-info">'+fmtActivity(r)+'</div><div class="day-record-info">'+fmtTime(r.startTime)+' → '+fmtTime(r.endTime)+'</div></div>'
         +'<div style="display:flex;align-items:center;gap:10px"><button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:6px 10px;white-space:nowrap">Editar</button>'
         +'<div class="day-record-hours" style="color:'+col+'">'+(r.negative?'−':'')+Math.abs(delta).toFixed(1)+'h</div></div></div>';
     }).join(''):'<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros este día.</div>';
@@ -938,7 +935,7 @@ function renderDayPanel(key){
       vacSection='<div style="border-top:1px solid var(--border);padding-top:20px;margin-bottom:20px">'
         +'<div class="day-note-label">'+ICON_VAC_SM+' De vacaciones</div>'
         +'<div style="display:flex;flex-direction:column;gap:1px;background:var(--border)">'
-        +vacs.map(function(v){return '<div class="vac-item">'+ICON_VAC_LG+'<span style="display:none">x</span><span style="font-size:13px">'+esc(v.employeeName)+'</span><span style="font-size:11px;color:var(--muted);margin-left:auto">De vacaciones</span></div>';}).join('')
+        +vacs.map(function(v){return '<div class="vac-item">'+ICON_VAC_LG+'<span style="display:none">x</span><span style="font-size:13px">'+v.employeeName+'</span><span style="font-size:11px;color:var(--muted);margin-left:auto">De vacaciones</span></div>';}).join('')
         +'</div></div>';
     }
 
@@ -1013,13 +1010,13 @@ function setHoursMode(mode){
   if(mode==='sub')subUpdateRecords();
 }
 
-function ahUseNow(){var now=new Date();document.getElementById('ah-date').value=todayISO();document.getElementById('ah-time-start').value=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');}
+function ahUseNow(){var now=new Date();document.getElementById('ah-date').value=now.toISOString().slice(0,10);document.getElementById('ah-time-start').value=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');}
 
 function openHoursModal(prefillDate){
   hoursMode='add';
   document.getElementById('m-hours').classList.remove('hidden');
   var empSel=document.getElementById('ah-emp');
-  empSel.innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+esc(e.name)+'</option>';}).join('');
+  empSel.innerHTML=db.employees.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('');
   document.getElementById('sub-emp').innerHTML=empSel.innerHTML;
   ahUpdateCats();
   document.getElementById('ah-date').value=prefillDate||todayISO();
@@ -1028,14 +1025,14 @@ function openHoursModal(prefillDate){
   setHoursMode('add');
 }
 
-function ahUpdateCats(){document.getElementById('ah-cat').innerHTML=db.categories.map(function(c,i){return '<option value="'+i+'">'+esc(c.name)+'</option>';}).join('');ahUpdateSubs();}
-function ahUpdateSubs(){var ci=parseInt(document.getElementById('ah-cat').value);var cat=db.categories[ci];document.getElementById('ah-sub').innerHTML=(cat?cat.subs:[]).map(function(s,i){return '<option value="'+i+'">'+esc(s.name)+'</option>';}).join('');ahUpdateTasks();}
-function ahUpdateTasks(){var ci=parseInt(document.getElementById('ah-cat').value);var si=parseInt(document.getElementById('ah-sub').value);var cat=db.categories[ci];var sub=cat?cat.subs[si]:null;document.getElementById('ah-task').innerHTML=(sub?sub.tasks:[]).map(function(t){return '<option value="'+esc(t)+'">'+esc(t)+'</option>';}).join('');}
+function ahUpdateCats(){document.getElementById('ah-cat').innerHTML=db.categories.map(function(c,i){return '<option value="'+i+'">'+c.name+'</option>';}).join('');ahUpdateSubs();}
+function ahUpdateSubs(){var ci=parseInt(document.getElementById('ah-cat').value);var cat=db.categories[ci];document.getElementById('ah-sub').innerHTML=(cat?cat.subs:[]).map(function(s,i){return '<option value="'+i+'">'+s.name+'</option>';}).join('');ahUpdateTasks();}
+function ahUpdateTasks(){var ci=parseInt(document.getElementById('ah-cat').value);var si=parseInt(document.getElementById('ah-sub').value);var cat=db.categories[ci];var sub=cat?cat.subs[si]:null;document.getElementById('ah-task').innerHTML=(sub?sub.tasks:[]).map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');}
 
 function subUpdateRecords(){
   var empId=parseInt(document.getElementById('sub-emp').value);
   var recs=db.records.filter(function(r){return r.endTime&&!r.negative&&r.employeeId===empId;}).sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});
-  document.getElementById('sub-rec').innerHTML=recs.map(function(r){return '<option value="'+r.id+'">'+fmtDate(r.startTime)+' · '+esc(r.categoryName)+' / '+esc(r.subName)+' · '+durH(r.startTime,r.endTime).toFixed(1)+'h</option>';}).join('');
+  document.getElementById('sub-rec').innerHTML=recs.map(function(r){return '<option value="'+r.id+'">'+fmtDate(r.startTime)+' · '+r.categoryName+' / '+r.subName+' · '+durH(r.startTime,r.endTime).toFixed(1)+'h</option>';}).join('');
   document.getElementById('sub-hours').value='';document.getElementById('sub-preview').textContent='Selecciona un registro y las horas a restar.';document.getElementById('sub-preview').style.color='var(--muted2)';
 }
 function subRecordChanged(){document.getElementById('sub-hours').value='';document.getElementById('sub-preview').textContent='Introduce las horas a restar.';document.getElementById('sub-preview').style.color='var(--muted2)';}
@@ -1056,7 +1053,7 @@ function confirmHours(){
     var currentH=durH(rec.startTime,rec.endTime);var newH=currentH-subtract;
     if(newH<=0){alert('No puedes restar más de '+currentH.toFixed(1)+'h.');return;}
     rec.endTime=new Date(new Date(rec.startTime).getTime()+newH*3600000).toISOString();rec.manual=true;
-    document.getElementById('m-hours').classList.add('hidden');persistUpdateRecord(rec);if(selectedDay)renderDayPanel(selectedDay);renderCalendar();renderHistorial();return;
+    document.getElementById('m-hours').classList.add('hidden');persist();if(selectedDay)renderDayPanel(selectedDay);renderCalendar();renderHistorial();return;
   }
   var empId=parseInt(document.getElementById('ah-emp').value);var ci=parseInt(document.getElementById('ah-cat').value);var si=parseInt(document.getElementById('ah-sub').value);
   var task=document.getElementById('ah-task').value;var dateVal=document.getElementById('ah-date').value;var timeVal=document.getElementById('ah-time-start').value||'09:00';var hours=parseFloat(document.getElementById('ah-hours').value);
@@ -1064,9 +1061,8 @@ function confirmHours(){
   var emp=db.employees.find(function(e){return e.id===empId;});var cat=db.categories[ci];var sub=cat?cat.subs[si]:null;
   if(!emp||!cat||!sub){alert('Selección inválida.');return;}
   var start=new Date(dateVal+'T'+timeVal+':00');var end=new Date(start.getTime()+hours*3600000);
-  var rec={id:Date.now(),employeeId:emp.id,employeeName:emp.name,categoryId:cat.id,categoryName:cat.name,categoryIcon:cat.icon||'',subId:sub.id,subName:sub.name,task:task,startTime:start.toISOString(),endTime:end.toISOString(),manual:true,negative:false};
-  db.records.push(rec);
-  document.getElementById('m-hours').classList.add('hidden');persistAddRecord(rec);if(selectedDay===dateVal)renderDayPanel(dateVal);renderCalendar();
+  db.records.push({id:Date.now(),employeeId:emp.id,employeeName:emp.name,categoryId:cat.id,categoryName:cat.name,categoryIcon:cat.icon||'',subId:sub.id,subName:sub.name,task:task,startTime:start.toISOString(),endTime:end.toISOString(),manual:true,negative:false});
+  document.getElementById('m-hours').classList.add('hidden');persist();if(selectedDay===dateVal)renderDayPanel(dateVal);renderCalendar();
 }
 
 var editingRecordId=null;
@@ -1076,7 +1072,7 @@ function deleteRecord(recId){
   var label=rec.employeeName+' · '+fmtActivity(rec)+' · '+fmtDate(rec.startTime);
   if(!confirm('¿Eliminar este registro?\n\n'+label))return;
   db.records=db.records.filter(function(r){return r.id!==recId;});
-  persistDeleteRecord(recId);if(selectedDay)renderDayPanel(selectedDay);renderCalendar();renderHistorial();
+  persist();if(selectedDay)renderDayPanel(selectedDay);renderCalendar();renderHistorial();
 }
 
 function openEditRecordModal(recId){
@@ -1093,7 +1089,7 @@ function confirmEditRecord(){
   var h=parseFloat(document.getElementById('mer-hours').value);if(isNaN(h)||h<=0){alert('Introduce un número válido.');return;}
   var rec=db.records.find(function(r){return r.id===editingRecordId;});if(!rec)return;
   rec.endTime=new Date(new Date(rec.startTime).getTime()+h*3600000).toISOString();rec.manual=true;
-  document.getElementById('m-edit-record').classList.add('hidden');editingRecordId=null;persistUpdateRecord(rec);if(selectedDay)renderDayPanel(selectedDay);renderCalendar();renderHistorial();
+  document.getElementById('m-edit-record').classList.add('hidden');editingRecordId=null;persist();if(selectedDay)renderDayPanel(selectedDay);renderCalendar();renderHistorial();
 }
 
 function closeAllModals(){['m-cat','m-sub','m-task'].forEach(function(id){document.getElementById(id).classList.add('hidden');});mEmp=null;mCat=null;mSub=null;}
@@ -1101,7 +1097,7 @@ function openFichajeModal(empId){mEmp=null;for(var i=0;i<db.employees.length;i++
 function openStep1(){
   document.getElementById('m-sub').classList.add('hidden');document.getElementById('m-task').classList.add('hidden');
   document.getElementById('m-emp-label').textContent=mEmp.name.split(' ')[0];
-  var html='';for(var i=0;i<db.categories.length;i++){var c=db.categories[i];html+='<button class="opt-btn" data-ci="'+i+'">'+esc(c.name)+'<span class="opt-arrow">→</span></button>';}
+  var html='';for(var i=0;i<db.categories.length;i++){var c=db.categories[i];html+='<button class="opt-btn" data-ci="'+i+'">'+c.name+'<span class="opt-arrow">→</span></button>';}
   var box=document.getElementById('m-cat-opts');box.innerHTML=html;
   box.querySelectorAll('.opt-btn').forEach(function(btn){btn.addEventListener('click',function(){mCat=db.categories[parseInt(this.getAttribute('data-ci'))];openStep2();});});
   document.getElementById('m-cat').classList.remove('hidden');
@@ -1109,14 +1105,14 @@ function openStep1(){
 function openStep2(){
   document.getElementById('m-cat').classList.add('hidden');document.getElementById('m-task').classList.add('hidden');
   document.getElementById('m-bc1').textContent=mCat.name;document.getElementById('m-sub-title').textContent=mCat.name;
-  var html='';for(var i=0;i<mCat.subs.length;i++){var s=mCat.subs[i];html+='<button class="opt-btn" data-si="'+i+'">'+esc(s.name)+'<span class="opt-arrow">→</span></button>';}
+  var html='';for(var i=0;i<mCat.subs.length;i++){var s=mCat.subs[i];html+='<button class="opt-btn" data-si="'+i+'">'+s.name+'<span class="opt-arrow">→</span></button>';}
   var box=document.getElementById('m-sub-opts');box.innerHTML=html;
   box.querySelectorAll('.opt-btn').forEach(function(btn){btn.addEventListener('click',function(){mSub=mCat.subs[parseInt(this.getAttribute('data-si'))];openStep3();});});
   document.getElementById('m-sub').classList.remove('hidden');
 }
 function openStep3(){
   document.getElementById('m-sub').classList.add('hidden');document.getElementById('m-bc2').textContent=mCat.name+' / '+mSub.name;
-  var html='';for(var i=0;i<mSub.tasks.length;i++)html+='<button class="opt-btn" data-ti="'+i+'">'+esc(mSub.tasks[i])+'<span class="opt-arrow">→</span></button>';
+  var html='';for(var i=0;i<mSub.tasks.length;i++)html+='<button class="opt-btn" data-ti="'+i+'">'+mSub.tasks[i]+'<span class="opt-arrow">→</span></button>';
   var box=document.getElementById('m-task-opts');box.innerHTML=html;
   box.querySelectorAll('.opt-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -1132,14 +1128,13 @@ function openStep3(){
         document.getElementById('m-overtime').classList.remove('hidden');
         return;
       }
-      var rec={id:Date.now(),employeeId:empId,employeeName:empName,categoryId:catId,categoryName:catName,categoryIcon:catIcon,subId:subId,subName:subName,task:task,startTime:nowISO(),endTime:null};
-      db.records.push(rec);
-      persistAddRecord(rec);
+      db.records.push({id:Date.now(),employeeId:empId,employeeName:empName,categoryId:catId,categoryName:catName,categoryIcon:catIcon,subId:subId,subName:subName,task:task,startTime:nowISO(),endTime:null});
+      persist();
     });
   });
   document.getElementById('m-task').classList.remove('hidden');
 }
-function registrarSalida(empId){for(var i=0;i<db.records.length;i++)if(db.records[i].employeeId===empId&&!db.records[i].endTime){db.records[i].endTime=nowISO();persistUpdateRecord(db.records[i]);return;}}
+function registrarSalida(empId){for(var i=0;i<db.records.length;i++)if(db.records[i].employeeId===empId&&!db.records[i].endTime){db.records[i].endTime=nowISO();break;}persist();}
 
 /* ── RENDER ── */
 function render(fromFirebase){
@@ -1155,16 +1150,40 @@ function renderFichaje(){
   for(var i=0;i<db.employees.length;i++){
     var emp=db.employees[i];var active=activeRecord(emp.id);
     var wh=weekHours(emp.id),pct=Math.min(100,Math.round(wh/GOAL*100));
-    var oth=overtimeWeekHours(emp.id);
     var fillColor=pct>=100?'#4ade80':pct>=60?'#fbbf24':'#ffffff';
-    var initials=esc(emp.name.split(' ').map(function(n){return n[0];}).join('').toUpperCase());
+    var initials=emp.name.split(' ').map(function(n){return n[0];}).join('').toUpperCase();
     var btn=active?'<button class="ficha-btn salida" onclick="registrarSalida('+emp.id+')">Registrar salida</button>':'<button class="ficha-btn entrada" onclick="openFichajeModal('+emp.id+')">Registrar entrada</button>';
     html+='<div class="card '+(active?'checked':'')+'"><div class="card-header"><div class="card-initials">'+initials+'</div><div class="card-dot '+(active?'in':'out')+'"></div></div>'
-      +'<div><div class="card-name">'+esc(emp.name)+'</div><div class="card-role">'+esc(emp.role)+'</div></div>'
-      +(active?'<div><div class="card-task">'+esc(fmtActivity(active))+'</div></div>':'')
-      +'<div class="card-meta"><div class="card-hours">'+wh.toFixed(1)+'h de '+GOAL+'h — '+pct+'%</div><div class="prog-bg"><div class="prog-fill" style="width:'+pct+'%;background:'+fillColor+'"></div></div>'+(oth>0?'<div style="font-size:11px;color:#a78bfa;letter-spacing:1px;margin-top:6px">+ '+oth.toFixed(1)+'h extras</div>':'')+'</div>'+btn+'</div>';
+      +'<div><div class="card-name">'+emp.name+'</div><div class="card-role">'+emp.role+'</div></div>'
+      +(active?'<div><div class="card-task">'+fmtActivity(active)+'</div></div>':'')
+      +'<div class="card-meta"><div class="card-hours">'+wh.toFixed(1)+'h de '+GOAL+'h — '+pct+'%</div><div class="prog-bg"><div class="prog-fill" style="width:'+pct+'%;background:'+fillColor+'"></div></div></div>'+btn+'</div>';
   }
   document.getElementById('grid').innerHTML=html||'<div style="padding:32px;color:var(--muted);font-size:12px;letter-spacing:1px">Sin empleados.</div>';
+}
+
+function renderSemana(){
+  var mon=getMonday(),sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  var html='<div class="section-title">Semana '+mon.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})+' — '+sun.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})+'</div><div class="week-grid">';
+  for(var i=0;i<db.employees.length;i++){
+    var emp=db.employees[i],wh=weekHours(emp.id);var oth=overtimeWeekHours(emp.id);var pct=Math.min(100,Math.round(wh/GOAL*100));var cls='';var fc='var(--border2)';
+    var breakdown={};for(var j=0;j<db.records.length;j++){var r=db.records[j];if(r.employeeId===emp.id&&r.endTime&&inThisWeek(r.startTime)){var k=fmtActivity(r);var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);}}
+    var rows='';for(var k in breakdown){var v=breakdown[k];rows+='<div class="week-row"><span class="week-row-label">'+k+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
+    html+='<div class="week-card"><div><div class="week-name">'+emp.name+'</div><div class="week-role">'+emp.role+'</div></div><div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div><div class="week-goal">Objetivo: '+GOAL+'h — '+pct+'%</div><div class="week-prog"><div class="week-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+(oth>0?'<div style="font-size:11px;color:#a78bfa;letter-spacing:1px;margin-top:4px">+ '+oth.toFixed(1)+'h extras</div>':'')+(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin registros esta semana</div>')+'</div>';
+  }
+  html+='</div>'+renderWeekExportSection();
+  document.getElementById('semana-content').innerHTML=html;
+}
+
+function getPastWeeks(){
+  var weeks={},curMon=getMonday();
+  var curKey=curMon.getFullYear()+'-'+(curMon.getMonth()+1).toString().padStart(2,'0')+'-'+curMon.getDate().toString().padStart(2,'0');
+  for(var i=0;i<db.records.length;i++){
+    var d=new Date(db.records[i].startTime),day=d.getDay();
+    d.setDate(d.getDate()-(day===0?6:day-1));d.setHours(0,0,0,0);
+    var iso=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+    if(iso<curKey)weeks[iso]=true;
+  }
+  return Object.keys(weeks).sort(function(a,b){return b.localeCompare(a);});
 }
 
 function fmtWeekRange(mondayISO){
@@ -1174,10 +1193,68 @@ function fmtWeekRange(mondayISO){
   return mon.getDate()+' '+ms[mon.getMonth()]+(mon.getFullYear()!==sun.getFullYear()?' '+mon.getFullYear():'')+' – '+sun.getDate()+' '+ms[sun.getMonth()]+' '+sun.getFullYear();
 }
 
+function renderWeekExportSection(){
+  var weeks=getPastWeeks();
+  var months=getPastMonths();
+  var weekBlock='',monthBlock='';
+  if(!weeks.length){weekBlock='<div style="font-size:12px;color:var(--muted);letter-spacing:1px">No hay semanas pasadas con registros aún.</div>';}
+  else{
+    var opts=weeks.map(function(w){return '<option value="'+w+'">'+fmtWeekRange(w)+'</option>';}).join('');
+    weekBlock='<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'
+      +'<select id="week-export-sel" class="sel" style="flex:1;max-width:360px;font-size:12px;padding:10px 4px">'+opts+'</select>'
+      +'<button class="btn b-save" onclick="exportWeekPDF(document.getElementById(\'week-export-sel\').value)" style="font-size:10px;letter-spacing:2px;padding:13px 24px">↓ Descargar PDF</button>'
+      +'</div>';
+  }
+  if(!months.length){monthBlock='<div style="font-size:12px;color:var(--muted);letter-spacing:1px">No hay meses pasados con registros aún.</div>';}
+  else{
+    var mopts=months.map(function(m){return '<option value="'+m+'">'+fmtMonthLabel(m)+'</option>';}).join('');
+    monthBlock='<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'
+      +'<select id="month-export-sel" class="sel" style="flex:1;max-width:360px;font-size:12px;padding:10px 4px">'+mopts+'</select>'
+      +'<button class="btn b-save" onclick="exportMonthPDF(document.getElementById(\'month-export-sel\').value)" style="font-size:10px;letter-spacing:2px;padding:13px 24px">↓ Descargar PDF</button>'
+      +'</div>';
+  }
+  return '<div style="margin-top:40px;border-top:1px solid var(--border);padding-top:32px">'
+    +'<div class="section-title" style="margin-bottom:4px">Informe semanal</div>'
+    +'<div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">Selecciona una semana pasada y descarga el informe PDF por empleado</div>'
+    +weekBlock
+    +'</div>'
+    +'<div style="margin-top:40px;border-top:1px solid var(--border);padding-top:32px">'
+    +'<div class="section-title" style="margin-bottom:4px">Informe mensual</div>'
+    +'<div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">Selecciona un mes y descarga el informe PDF por empleado</div>'
+    +monthBlock
+    +'</div>';
+}
+
+function getPastMonths(){
+  var months={},now=new Date();
+  var curKey=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  for(var i=0;i<db.records.length;i++){
+    var d=new Date(db.records[i].startTime);
+    var key=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0');
+    if(key<curKey)months[key]=true;
+  }
+  return Object.keys(months).sort(function(a,b){return b.localeCompare(a);});
+}
+
 function fmtMonthLabel(ym){
   var p=ym.split('-');
   var ms=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   return ms[parseInt(p[1])-1]+' '+p[0];
+}
+
+function exportMonthPDF(ym){
+  if(!ym){alert('Selecciona un mes.');return;}
+  var p=ym.split('-'),y=parseInt(p[0]),m=parseInt(p[1])-1;
+  var from=new Date(y,m,1,0,0,0,0),to=new Date(y,m+1,0,23,59,59,999);
+  var monthRecs=db.records.filter(function(r){var d=new Date(r.startTime);return r.endTime&&d>=from&&d<=to;});
+  buildPeriodPDF(monthRecs,fmtMonthLabel(ym));
+}
+
+function exportWeekPDF(mondayISO){
+  if(!mondayISO){alert('Selecciona una semana.');return;}
+  var p=mondayISO.split('-'),mon=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]),0,0,0,0),sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);
+  var weekRecs=db.records.filter(function(r){var d=new Date(r.startTime);return r.endTime&&d>=mon&&d<=sun;});
+  buildPeriodPDF(weekRecs,'Semana '+fmtWeekRange(mondayISO));
 }
 
 function buildPeriodPDF(recs,periodLabel){
@@ -1204,21 +1281,21 @@ function buildPeriodPDF(recs,periodLabel){
       cat.rows.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
       var rowsHTML=cat.rows.map(function(row){
         return '<tr><td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#666;white-space:nowrap">'+row.dateStr+'</td>'
-          +'<td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:12px">'+esc(row.sub)+' / '+esc(row.task)+'</td>'
+          +'<td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:12px">'+row.sub+' / '+row.task+'</td>'
           +'<td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#888;white-space:nowrap">'+row.from+' → '+row.to+'</td>'
           +'<td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:right;font-weight:500;white-space:nowrap;color:'+(row.neg?'#c53030':'#111')+'">'+(row.neg?'−':'')+Math.abs(row.h).toFixed(1)+'h</td></tr>';
       }).join('');
       catHTML+='<div style="margin-bottom:24px">'
         +'<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#f5f5f5;border-top:2px solid #ddd;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#555">'
-        +'<span>'+esc(cat.name)+'</span><span>'+cat.total.toFixed(1)+'h</span></div>'
+        +'<span>'+cat.name+'</span><span>'+cat.total.toFixed(1)+'h</span></div>'
         +'<table style="width:100%;border-collapse:collapse"><tbody>'+rowsHTML+'</tbody></table></div>';
     }
     var pct=Math.min(100,Math.round(total/GOAL*100));
     var barColor=total>=GOAL?'#38a169':total>=20?'#d69e2e':'#aaa';
     empSections+='<div style="margin-bottom:52px;page-break-inside:avoid">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:2px solid #111;margin-bottom:24px">'
-      +'<div><span style="font-size:20px;font-weight:600;letter-spacing:1px">'+esc(emp.name)+'</span>'
-      +'<span style="font-size:12px;color:#888;margin-left:10px;text-transform:uppercase;letter-spacing:1px">'+esc(emp.role)+'</span></div>'
+      +'<div><span style="font-size:20px;font-weight:600;letter-spacing:1px">'+emp.name+'</span>'
+      +'<span style="font-size:12px;color:#888;margin-left:10px;text-transform:uppercase;letter-spacing:1px">'+emp.role+'</span></div>'
       +'<div style="font-size:32px;font-weight:300">'+total.toFixed(1)+'<span style="font-size:14px;color:#888;margin-left:2px">h</span></div></div>'
       +catHTML+'</div>';
   }
@@ -1265,7 +1342,7 @@ function renderProjCard(sub,cat,showActions){
   for(var ti=0;ti<sub.tasks.length;ti++)taskMap[sub.tasks[ti]]=0;
   for(var ri=0;ri<db.records.length;ri++){var r=db.records[ri];if(r.subId===sub.id&&r.endTime){var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;totalH+=delta;if(taskMap[r.task]!==undefined)taskMap[r.task]+=delta;}}
   totalH=Math.max(0,totalH);
-  var rows='';for(var t in taskMap){var tv=Math.max(0,taskMap[t]);rows+='<div class="proj-row"><span class="proj-row-name">'+esc(t)+'</span><span class="proj-row-val">'+tv.toFixed(1)+'h</span></div>';}
+  var rows='';for(var t in taskMap){var tv=Math.max(0,taskMap[t]);rows+='<div class="proj-row"><span class="proj-row-name">'+t+'</span><span class="proj-row-val">'+tv.toFixed(1)+'h</span></div>';}
   var meta=getProjMeta(sub.id);
   var actionsHtml='';
   if(showActions){
@@ -1287,8 +1364,8 @@ function renderProjCard(sub,cat,showActions){
   }
   var badgeMap={active:'<span class="proj-status-badge badge-active">En marcha</span>',standby:'<span class="proj-status-badge badge-standby">Stand by</span>',done:'<span class="proj-status-badge badge-done">Terminado</span>'};
   var folderTag='';
-  if(meta.folderId){var cf=db.clientFolders.find(function(f){return f.id===meta.folderId;});if(cf)folderTag='<div style="font-size:10px;color:var(--muted2);letter-spacing:1px;margin-top:2px">📁 '+esc(cf.name)+'</div>';}
-  return '<div class="proj-card"><div><div class="proj-cat">'+esc(cat.name)+'</div><div class="proj-name">'+esc(sub.name)+'</div>'+badgeMap[meta.status||'active']+folderTag+'</div><div class="proj-total">'+totalH.toFixed(1)+'<span style="font-size:16px;color:var(--muted)">h</span></div><div class="proj-total-label">Horas totales invertidas</div><div class="proj-rows">'+rows+'</div><div class="proj-bar"><div class="proj-fill" style="width:'+Math.min(100,totalH/40*100).toFixed(0)+'%"></div></div>'+actionsHtml+'</div>';
+  if(meta.folderId){var cf=db.clientFolders.find(function(f){return f.id===meta.folderId;});if(cf)folderTag='<div style="font-size:10px;color:var(--muted2);letter-spacing:1px;margin-top:2px">📁 '+cf.name+'</div>';}
+  return '<div class="proj-card"><div><div class="proj-cat">'+cat.name+'</div><div class="proj-name">'+sub.name+'</div>'+badgeMap[meta.status||'active']+folderTag+'</div><div class="proj-total">'+totalH.toFixed(1)+'<span style="font-size:16px;color:var(--muted)">h</span></div><div class="proj-total-label">Horas totales invertidas</div><div class="proj-rows">'+rows+'</div><div class="proj-bar"><div class="proj-fill" style="width:'+Math.min(100,totalH/40*100).toFixed(0)+'%"></div></div>'+actionsHtml+'</div>';
 }
 
 function renderSubsSection(subs,cat,statusFilter){
@@ -1319,7 +1396,7 @@ function renderSubsSection(subs,cat,statusFilter){
     var isOpen=db.folderOpen&&db.folderOpen[fid];
     html+='<div class="client-folder">'
       +'<div class="client-folder-header" onclick="toggleFolder(\''+fid+'\')">'
-        +'<div class="client-folder-name"><span class="client-folder-icon">📁</span>'+esc(fname)+'<span style="font-size:11px;color:var(--muted2);letter-spacing:1px">('+fsubs.length+')</span></div>'
+        +'<div class="client-folder-name"><span class="client-folder-icon">📁</span>'+fname+'<span style="font-size:11px;color:var(--muted2);letter-spacing:1px">('+fsubs.length+')</span></div>'
         +'<span class="client-folder-chevron'+(isOpen?' open':'')+'">▶</span>'
       +'</div>'
       +'<div class="client-folder-body'+(isOpen?' open':'')+'"><div class="proj-grid">';
@@ -1370,7 +1447,6 @@ function renderProyectos(){
     renderProjSearchResults();
     return;
 
-  } else if(projTab==='reuniones'){
     var reunCat=null;for(var i=0;i<db.categories.length;i++)if(db.categories[i].id==='c2'||db.categories[i].name==='Reuniones'){reunCat=db.categories[i];break;}
     if(!reunCat){html+='<div style="color:var(--muted);font-size:12px;letter-spacing:1px">Sin categoría Reuniones.</div>';document.getElementById('proyectos-content').innerHTML=html;return;}
     html+='<div class="proj-section-header"><div class="proj-section-label">Reuniones</div></div><div class="proj-grid">';
@@ -1378,8 +1454,8 @@ function renderProyectos(){
       var taskMap={},totalH=0;
       for(var ti=0;ti<sub.tasks.length;ti++)taskMap[sub.tasks[ti]]=0;
       for(var ri=0;ri<db.records.length;ri++){var r=db.records[ri];if(r.subId===sub.id&&r.endTime){var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;totalH+=delta;if(taskMap[r.task]!==undefined)taskMap[r.task]+=delta;}}
-      totalH=Math.max(0,totalH);var rows='';for(var t in taskMap){var tv=Math.max(0,taskMap[t]);rows+='<div class="proj-row"><span class="proj-row-name">'+esc(t)+'</span><span class="proj-row-val">'+tv.toFixed(1)+'h</span></div>';}
-      html+='<div class="proj-card"><div><div class="proj-cat">'+esc(reunCat.name)+'</div><div class="proj-name">'+esc(sub.name)+'</div></div><div class="proj-total">'+totalH.toFixed(1)+'<span style="font-size:16px;color:var(--muted)">h</span></div><div class="proj-total-label">Horas totales</div><div class="proj-rows">'+rows+'</div><div class="proj-bar"><div class="proj-fill" style="width:'+Math.min(100,totalH/40*100).toFixed(0)+'%"></div></div></div>';
+      totalH=Math.max(0,totalH);var rows='';for(var t in taskMap){var tv=Math.max(0,taskMap[t]);rows+='<div class="proj-row"><span class="proj-row-name">'+t+'</span><span class="proj-row-val">'+tv.toFixed(1)+'h</span></div>';}
+      html+='<div class="proj-card"><div><div class="proj-cat">'+reunCat.name+'</div><div class="proj-name">'+sub.name+'</div></div><div class="proj-total">'+totalH.toFixed(1)+'<span style="font-size:16px;color:var(--muted)">h</span></div><div class="proj-total-label">Horas totales</div><div class="proj-rows">'+rows+'</div><div class="proj-bar"><div class="proj-fill" style="width:'+Math.min(100,totalH/40*100).toFixed(0)+'%"></div></div></div>';
     });
     html+='</div>';
 
@@ -1391,8 +1467,8 @@ function renderProyectos(){
       var taskMap={},totalH=0;
       for(var ti=0;ti<sub.tasks.length;ti++)taskMap[sub.tasks[ti]]=0;
       for(var ri=0;ri<db.records.length;ri++){var r=db.records[ri];if(r.subId===sub.id&&r.endTime){var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;totalH+=delta;if(taskMap[r.task]!==undefined)taskMap[r.task]+=delta;}}
-      totalH=Math.max(0,totalH);var rows='';for(var t in taskMap){var tv=Math.max(0,taskMap[t]);rows+='<div class="proj-row"><span class="proj-row-name">'+esc(t)+'</span><span class="proj-row-val">'+tv.toFixed(1)+'h</span></div>';}
-      html+='<div class="proj-card"><div><div class="proj-cat">'+esc(adminCat.name)+'</div><div class="proj-name">'+esc(sub.name)+'</div></div><div class="proj-total">'+totalH.toFixed(1)+'<span style="font-size:16px;color:var(--muted)">h</span></div><div class="proj-total-label">Horas totales</div><div class="proj-rows">'+rows+'</div><div class="proj-bar"><div class="proj-fill" style="width:'+Math.min(100,totalH/40*100).toFixed(0)+'%"></div></div></div>';
+      totalH=Math.max(0,totalH);var rows='';for(var t in taskMap){var tv=Math.max(0,taskMap[t]);rows+='<div class="proj-row"><span class="proj-row-name">'+t+'</span><span class="proj-row-val">'+tv.toFixed(1)+'h</span></div>';}
+      html+='<div class="proj-card"><div><div class="proj-cat">'+adminCat.name+'</div><div class="proj-name">'+sub.name+'</div></div><div class="proj-total">'+totalH.toFixed(1)+'<span style="font-size:16px;color:var(--muted)">h</span></div><div class="proj-total-label">Horas totales</div><div class="proj-rows">'+rows+'</div><div class="proj-bar"><div class="proj-fill" style="width:'+Math.min(100,totalH/40*100).toFixed(0)+'%"></div></div></div>';
     });
     html+='</div>';
   }
@@ -1425,9 +1501,9 @@ function renderProjSearchResults(){
       html+='</div>';
     });
     if(!found){
-      html='<div style="padding:48px 0;text-align:center"><div style="font-size:13px;color:var(--muted);letter-spacing:1px">Sin resultados para <span style="color:var(--text)">\''+esc(projSearchQuery)+'\'</span></div><div style="font-size:11px;color:var(--muted2);letter-spacing:0.5px;margin-top:8px">Prueba con otro término</div></div>';
+      html='<div style="padding:48px 0;text-align:center"><div style="font-size:13px;color:var(--muted);letter-spacing:1px">Sin resultados para <span style="color:var(--text)">\''+projSearchQuery+'\'</span></div><div style="font-size:11px;color:var(--muted2);letter-spacing:0.5px;margin-top:8px">Prueba con otro término</div></div>';
     } else {
-      html='<div class="proj-search-stats">'+found+' resultado'+(found!==1?'s':'')+' para "'+esc(projSearchQuery)+'"</div>'+html;
+      html='<div class="proj-search-stats">'+found+' resultado'+(found!==1?'s':'')+' para "'+projSearchQuery+'"</div>'+html;
     }
   } else {
     // Normal mode: show all sections
@@ -1461,7 +1537,7 @@ function openMoveModal(subId,targetStatus){
   // Build folder options
   var foldersHtml='<div onclick="mmpFolderSel=null;renderMmpFolders()" style="padding:12px 16px;background:var(--bg);cursor:pointer;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between" id="mmp-f-none"><span>Sin carpeta</span><span id="mmp-f-none-check" style="color:#4ade80">✓</span></div>';
   (db.clientFolders||[]).forEach(function(cf){
-    foldersHtml+='<div onclick="mmpFolderSel=\''+cf.id+'\';renderMmpFolders()" style="padding:12px 16px;background:var(--bg);cursor:pointer;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between" id="mmp-f-'+cf.id+'"><span>📁 '+esc(cf.name)+'</span><span id="mmp-f-check-'+cf.id+'" style="color:#4ade80;display:none">✓</span></div>';
+    foldersHtml+='<div onclick="mmpFolderSel=\''+cf.id+'\';renderMmpFolders()" style="padding:12px 16px;background:var(--bg);cursor:pointer;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between" id="mmp-f-'+cf.id+'"><span>📁 '+cf.name+'</span><span id="mmp-f-check-'+cf.id+'" style="color:#4ade80;display:none">✓</span></div>';
   });
   document.getElementById('mmp-folder-opts').innerHTML=foldersHtml;
   document.getElementById('mmp-new-folder-name').value='';
@@ -1492,7 +1568,7 @@ function mmpAddFolder(){
   // Rebuild folder list in modal
   var foldersHtml='<div onclick="mmpFolderSel=null;renderMmpFolders()" style="padding:12px 16px;background:var(--bg);cursor:pointer;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between" id="mmp-f-none"><span>Sin carpeta</span><span id="mmp-f-none-check" style="color:#4ade80;display:none">✓</span></div>';
   (db.clientFolders||[]).forEach(function(cf){
-    foldersHtml+='<div onclick="mmpFolderSel=\''+cf.id+'\';renderMmpFolders()" style="padding:12px 16px;background:var(--bg);cursor:pointer;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between" id="mmp-f-'+cf.id+'"><span>📁 '+esc(cf.name)+'</span><span id="mmp-f-check-'+cf.id+'" style="color:#4ade80;display:none">✓</span></div>';
+    foldersHtml+='<div onclick="mmpFolderSel=\''+cf.id+'\';renderMmpFolders()" style="padding:12px 16px;background:var(--bg);cursor:pointer;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between" id="mmp-f-'+cf.id+'"><span>📁 '+cf.name+'</span><span id="mmp-f-check-'+cf.id+'" style="color:#4ade80;display:none">✓</span></div>';
   });
   document.getElementById('mmp-folder-opts').innerHTML=foldersHtml;
   document.getElementById('mmp-new-folder-name').value='';
@@ -1573,7 +1649,7 @@ function exportAllPDF(){
   if(!recs.length){alert('Sin registros.');return;}
   var empId=document.getElementById('f-emp')?document.getElementById('f-emp').value:'all';
   var empName=empId!=='all'?(db.employees.find(function(e){return e.id==empId;})||{}).name||'':'Todos los empleados';
-  var label='Historial completo'+(empName&&empId!=='all'?' — '+esc(empName):'');
+  var label='Historial completo'+(empName&&empId!=='all'?' — '+empName:'');
   buildPeriodPDF(recs,label);
 }
 
@@ -1585,8 +1661,8 @@ function exportCustomPDF(){
 
 function initHistorialFilters(){
   var empSel=document.getElementById('f-emp');if(!empSel)return;
-  empSel.innerHTML='<option value="all">Todos</option>'+db.employees.map(function(e){return '<option value="'+e.id+'">'+esc(e.name)+'</option>';}).join('');
-  document.getElementById('f-cat').innerHTML='<option value="all">Todas</option>'+db.categories.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('');
+  empSel.innerHTML='<option value="all">Todos</option>'+db.employees.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('');
+  document.getElementById('f-cat').innerHTML='<option value="all">Todas</option>'+db.categories.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
 }
 
 function getHistFilters(){
@@ -1642,14 +1718,14 @@ function renderHistorial(){
     var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'Activo';var durColor=r.negative?'#f87171':r.endTime?'var(--text)':'#4ade80';
     var tag='';if(r.overtime)tag='<span class="tag-extra">EXTRA</span>';else if(r.manual&&!r.negative)tag='<span style="font-size:9px;color:var(--muted2);letter-spacing:1px;margin-left:6px">MANUAL</span>';if(r.negative)tag='<span style="font-size:9px;color:#f87171;letter-spacing:1px;margin-left:6px">− AJUSTE</span>';
     var editBtn=r.endTime&&!r.negative?'<div style="display:flex;gap:6px;align-items:center"><button class="btn b-edit" onclick="openEditRecordModal('+r.id+')" style="font-size:9px;letter-spacing:1px;padding:5px 10px">Editar</button><span onclick="deleteRecord('+r.id+')" style="cursor:pointer;font-size:13px;color:var(--muted2);padding:4px 6px" onmouseover="this.style.color=\'#f87171\'" onmouseout="this.style.color=\'var(--muted2)\'">✕</span></div>':'<span></span>';
-    return '<div class="tbl-row" style="grid-template-columns:'+cols+'"><span style="font-size:13px">'+esc(r.employeeName)+tag+'</span><span style="font-size:12px;color:var(--muted)">'+esc(fmtActivity(r))+'</span><span style="font-size:11px;color:var(--muted2)">'+fmtDate(r.startTime)+(r.endTime?' · '+fmtTime(r.startTime):' · en curso')+'</span>'+editBtn+'<span style="font-size:13px;color:'+durColor+';text-align:right">'+(r.negative?'−':'')+dur+'</span></div>';
+    return '<div class="tbl-row" style="grid-template-columns:'+cols+'"><span style="font-size:13px">'+r.employeeName+tag+'</span><span style="font-size:12px;color:var(--muted)">'+fmtActivity(r)+'</span><span style="font-size:11px;color:var(--muted2)">'+fmtDate(r.startTime)+(r.endTime?' · '+fmtTime(r.startTime):' · en curso')+'</span>'+editBtn+'<span style="font-size:13px;color:'+durColor+';text-align:right">'+(r.negative?'−':'')+dur+'</span></div>';
   }).join('');
   document.getElementById('hist-content').innerHTML='<div class="tbl"><div class="tbl-head" style="grid-template-columns:'+cols+'"><span>Empleado</span><span>Actividad</span><span>Fecha</span><span></span><span style="text-align:right">Horas</span></div>'+rows+'</div>'+pagination;
 }
 
 function renderConfig(){
   var html='<div class="cfg-section"><div class="cfg-title-row"><span>Empleados</span></div>';
-  for(var i=0;i<db.employees.length;i++){var emp=db.employees[i];if(cfgState.editingEmp===emp.id){html+='<div class="cfg-row cfg-edit"><input id="ce-name" value="'+esc(emp.name)+'" style="flex:1;min-width:0"/><input id="ce-role" value="'+esc(emp.role)+'" style="flex:1;min-width:0"/><div class="cfg-btns"><button class="btn b-save" onclick="saveEmp('+emp.id+')">Guardar</button><button class="btn b-cancel" onclick="cfgState={};render()">Cancelar</button></div></div>';}else{html+='<div class="cfg-row"><div class="cfg-label">'+esc(emp.name)+'<div class="cfg-sub">'+esc(emp.role)+'</div></div><button class="btn b-edit" onclick="cfgState={editingEmp:'+emp.id+'};render()">Editar</button><button class="btn b-del" onclick="delEmp('+emp.id+')">Eliminar</button></div>';}}
+  for(var i=0;i<db.employees.length;i++){var emp=db.employees[i];if(cfgState.editingEmp===emp.id){html+='<div class="cfg-row cfg-edit"><input id="ce-name" value="'+emp.name+'" style="flex:1;min-width:0"/><input id="ce-role" value="'+emp.role+'" style="flex:1;min-width:0"/><div class="cfg-btns"><button class="btn b-save" onclick="saveEmp('+emp.id+')">Guardar</button><button class="btn b-cancel" onclick="cfgState={};render()">Cancelar</button></div></div>';}else{html+='<div class="cfg-row"><div class="cfg-label">'+emp.name+'<div class="cfg-sub">'+emp.role+'</div></div><button class="btn b-edit" onclick="cfgState={editingEmp:'+emp.id+'};render()">Editar</button><button class="btn b-del" onclick="delEmp('+emp.id+')">Eliminar</button></div>';}}
   if(cfgState.addingEmp){html+='<div class="cfg-row cfg-edit"><input id="ne-name" placeholder="Nombre" style="flex:1;min-width:0"/><input id="ne-role" placeholder="Puesto" style="flex:1;min-width:0"/><div class="cfg-btns"><button class="btn b-save" onclick="addEmp()">Añadir</button><button class="btn b-cancel" onclick="cfgState={};render()">Cancelar</button></div></div>';}else html+='<button class="btn-add" onclick="cfgState={addingEmp:true};render()">+ Añadir empleado</button>';
   html+='</div>';
 
@@ -1657,23 +1733,23 @@ function renderConfig(){
   html+='<div class="cfg-section"><div class="cfg-title-row"><span>Vacaciones registradas</span><button class="btn b-edit" onclick="openVacModal()" style="font-size:9px;padding:5px 10px">+ Añadir</button></div>';
   if(db.vacations&&db.vacations.length){
     db.vacations.forEach(function(v,idx){
-      html+='<div class="cfg-row"><div class="cfg-label">'+ICON_VAC_SM+esc(v.employeeName)+'<div class="cfg-sub">'+isoToDisplay(v.from)+' → '+isoToDisplay(v.to)+'</div></div><button class="btn b-del" onclick="delVac('+idx+')">Eliminar</button></div>';
+      html+='<div class="cfg-row"><div class="cfg-label">'+ICON_VAC_SM+v.employeeName+'<div class="cfg-sub">'+isoToDisplay(v.from)+' → '+isoToDisplay(v.to)+'</div></div><button class="btn b-del" onclick="delVac('+idx+')">Eliminar</button></div>';
     });
   }else{html+='<div style="padding:16px 24px;font-size:12px;color:var(--muted2)">Sin vacaciones registradas.</div>';}
   html+='</div>';
 
   for(var ci=0;ci<db.categories.length;ci++){
     var cat=db.categories[ci];html+='<div class="cfg-section">';
-    if(cfgState.editingCat===cat.id){html+='<div class="cfg-title-row cfg-edit"><input id="cc-name" value="'+esc(cat.name)+'" style="flex:1;min-width:0"/><div class="cfg-btns"><button class="btn b-save" onclick="saveCat(\''+cat.id+'\')">Guardar</button><button class="btn b-cancel" onclick="cfgState={};render()">Cancelar</button><button class="btn b-del" onclick="delCat(\''+cat.id+'\')">Eliminar</button></div></div>';}
-    else{html+='<div class="cfg-title-row">'+esc(cat.name)+'<button class="btn b-edit" onclick="cfgState={editingCat:\''+cat.id+'\'};render()">Editar</button></div>';}
+    if(cfgState.editingCat===cat.id){html+='<div class="cfg-title-row cfg-edit"><input id="cc-name" value="'+cat.name+'" style="flex:1;min-width:0"/><div class="cfg-btns"><button class="btn b-save" onclick="saveCat(\''+cat.id+'\')">Guardar</button><button class="btn b-cancel" onclick="cfgState={};render()">Cancelar</button><button class="btn b-del" onclick="delCat(\''+cat.id+'\')">Eliminar</button></div></div>';}
+    else{html+='<div class="cfg-title-row">'+cat.name+'<button class="btn b-edit" onclick="cfgState={editingCat:\''+cat.id+'\'};render()">Editar</button></div>';}
     var isProjCat=(cat.id==='c1'||cat.name==='Proyectos');
     var sortedSubs=cat.subs.slice().sort(function(a,b){return a.name.localeCompare(b.name,'es');});
     for(var si=0;si<sortedSubs.length;si++){
       var sub=sortedSubs[si];
       if(isProjCat){var m=getProjMeta(sub.id);if(m.status==='done')continue;}
       var sk=cat.id+'__'+sub.id;
-      if(cfgState.editingSub===sk){html+='<div class="cfg-row" style="flex-direction:column;align-items:flex-start;gap:12px"><div class="cfg-edit-inner" style="display:flex;gap:12px;width:100%"><input id="cs-name" value="'+esc(sub.name)+'" style="flex:1;min-width:0"/><button class="btn b-save" onclick="saveSub(\''+cat.id+'\',\''+sub.id+'\')">Guardar</button><button class="btn b-cancel" onclick="cfgState={};render()">Cancelar</button><button class="btn b-del" onclick="delSub(\''+cat.id+'\',\''+sub.id+'\')">Eliminar</button></div><div style="width:100%"><div style="font-size:10px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Tareas (una por línea)</div><textarea id="cs-tasks" style="width:100%;height:100px;resize:vertical;border:1px solid var(--border2);padding:12px;background:var(--bg2)">'+esc(sub.tasks.join('\n'))+'</textarea></div></div>';}
-      else{html+='<div class="cfg-row"><div class="cfg-label">'+esc(sub.name)+'<div class="cfg-sub">'+esc(sub.tasks.join(', '))+'</div></div><button class="btn b-edit" onclick="cfgState={editingSub:\''+sk+'\'};render()">Editar</button></div>';}
+      if(cfgState.editingSub===sk){html+='<div class="cfg-row" style="flex-direction:column;align-items:flex-start;gap:12px"><div class="cfg-edit-inner" style="display:flex;gap:12px;width:100%"><input id="cs-name" value="'+sub.name+'" style="flex:1;min-width:0"/><button class="btn b-save" onclick="saveSub(\''+cat.id+'\',\''+sub.id+'\')">Guardar</button><button class="btn b-cancel" onclick="cfgState={};render()">Cancelar</button><button class="btn b-del" onclick="delSub(\''+cat.id+'\',\''+sub.id+'\')">Eliminar</button></div><div style="width:100%"><div style="font-size:10px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Tareas (una por línea)</div><textarea id="cs-tasks" style="width:100%;height:100px;resize:vertical;border:1px solid var(--border2);padding:12px;background:var(--bg2)">'+sub.tasks.join('\n')+'</textarea></div></div>';}
+      else{html+='<div class="cfg-row"><div class="cfg-label">'+sub.name+'<div class="cfg-sub">'+sub.tasks.join(', ')+'</div></div><button class="btn b-edit" onclick="cfgState={editingSub:\''+sk+'\'};render()">Editar</button></div>';}
     }
     var ak='add__'+cat.id;
     if(cfgState.addingSub===ak){html+='<div class="cfg-row" style="flex-direction:column;align-items:flex-start;gap:12px"><input id="ns-name" placeholder="Nombre subcategoría" style="width:100%"/><div style="width:100%"><div style="font-size:10px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Tareas (una por línea)</div><textarea id="ns-tasks" placeholder="Tarea 1&#10;Tarea 2" style="width:100%;height:80px;resize:vertical;border:1px solid var(--border2);padding:12px;background:var(--bg2)"></textarea></div><div style="display:flex;gap:12px;margin-top:8px"><button class="btn b-save" onclick="addSub(\''+cat.id+'\')">Añadir</button><button class="btn b-cancel" onclick="cfgState={};render()">Cancelar</button></div></div></div>';}
@@ -1716,7 +1792,7 @@ function importData(input){
     var n=(clean.records?clean.records.length:0)+' registros · '+(clean.employees?clean.employees.length:0)+' empleados';
     if(!confirm('Esto REEMPLAZARÁ todos los datos actuales por los de la copia ('+n+').\n\n¿Continuar?')){input.value='';return;}
     db=clean;cfgState={};
-    persistFull();render();
+    persist();render();
     input.value='';
     alert('Copia de seguridad importada correctamente.');
   };
@@ -1726,16 +1802,17 @@ function importData(input){
 
 function saveEmp(id){var n=document.getElementById('ce-name').value.trim(),r=document.getElementById('ce-role').value.trim();if(!n)return;cfgState={};for(var i=0;i<db.employees.length;i++)if(db.employees[i].id===id){db.employees[i].name=n;db.employees[i].role=r;break;}persist();}
 function addEmp(){var n=document.getElementById('ne-name').value.trim(),r=document.getElementById('ne-role').value.trim();if(!n)return;cfgState={};db.employees.push({id:Date.now(),name:n,role:r});persist();}
-function delEmp(id){if(!confirm('¿Eliminar empleado?'))return;cfgState={};db.employees=db.employees.filter(function(e){return e.id!==id;});db.records=db.records.filter(function(r){return r.employeeId!==id;});if(db.vacations)db.vacations=db.vacations.filter(function(v){return v.employeeId!==id;});render();persist();persistDeleteRecordsByEmp(id);}
+function delEmp(id){if(!confirm('¿Eliminar empleado?'))return;cfgState={};db.employees=db.employees.filter(function(e){return e.id!==id;});db.records=db.records.filter(function(r){return r.employeeId!==id;});render();persist();}
 function saveCat(catId){var name=document.getElementById('cc-name').value.trim();if(!name)return;cfgState={};for(var i=0;i<db.categories.length;i++)if(db.categories[i].id===catId){db.categories[i].name=name;break;}persist();}
-function delCat(catId){if(!confirm('¿Eliminar categoría?'))return;cfgState={};var cat=db.categories.find(function(c){return c.id===catId;});if(cat&&cat.subs&&db.projectMeta)cat.subs.forEach(function(s){delete db.projectMeta[s.id];});db.categories=db.categories.filter(function(c){return c.id!==catId;});render();persist();}
+function delCat(catId){if(!confirm('¿Eliminar categoría?'))return;cfgState={};db.categories=db.categories.filter(function(c){return c.id!==catId;});render();persist();}
 function addCat(){var name=document.getElementById('nc-name').value.trim();if(!name)return;cfgState={};db.categories.push({id:'c'+Date.now(),name:name,icon:'',subs:[]});persist();}
 function saveSub(catId,subId){var name=document.getElementById('cs-name').value.trim(),tasks=document.getElementById('cs-tasks').value.split('\n').map(function(t){return t.trim();}).filter(Boolean);if(!name)return;cfgState={};for(var i=0;i<db.categories.length;i++){if(db.categories[i].id===catId){for(var j=0;j<db.categories[i].subs.length;j++){if(db.categories[i].subs[j].id===subId){db.categories[i].subs[j].name=name;db.categories[i].subs[j].tasks=tasks;break;}}break;}}persist();}
-function delSub(catId,subId){if(!confirm('¿Eliminar subcategoría?'))return;cfgState={};for(var i=0;i<db.categories.length;i++){if(db.categories[i].id===catId){db.categories[i].subs=db.categories[i].subs.filter(function(s){return s.id!==subId;});break;}}if(db.projectMeta)delete db.projectMeta[subId];render();persist();}
+function delSub(catId,subId){if(!confirm('¿Eliminar subcategoría?'))return;cfgState={};for(var i=0;i<db.categories.length;i++){if(db.categories[i].id===catId){db.categories[i].subs=db.categories[i].subs.filter(function(s){return s.id!==subId;});break;}}render();persist();}
 function addSub(catId){var name=document.getElementById('ns-name').value.trim(),tasks=document.getElementById('ns-tasks').value.split('\n').map(function(t){return t.trim();}).filter(Boolean);if(!name)return;cfgState={};for(var i=0;i<db.categories.length;i++){if(db.categories[i].id===catId){db.categories[i].subs.push({id:'s'+Date.now(),name:name,tasks:tasks});break;}}persist();}
 function delVac(idx){if(!confirm('¿Eliminar estas vacaciones?'))return;cfgState={};db.vacations.splice(idx,1);render();persist();}
 
 function exportCSV(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var hdr='Empleado,Categoría,Subcategoría,Tarea,Fecha,Entrada,Salida,Horas,Tipo\n',body=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(2):'';var tipo=r.negative?'Ajuste negativo':r.manual?'Manual':'Fichaje';return '"'+r.employeeName+'","'+r.categoryName+'","'+r.subName+'","'+r.task+'","'+fmtDate(r.startTime)+'","'+fmtTime(r.startTime)+'","'+(r.endTime?fmtTime(r.endTime):'activo')+'","'+dur+'","'+tipo+'"';}).join('\n');var blob=new Blob(['\uFEFF'+hdr+body],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fichajes_'+today().replace(/\//g,'-')+'.csv';a.click();}
+function exportPDF(){var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});if(!recs.length){alert('Sin registros.');return;}var win=window.open('','_blank'),rows=recs.map(function(r){var dur=r.endTime?durH(r.startTime,r.endTime).toFixed(1)+'h':'activo';return '<tr><td>'+r.employeeName+'</td><td>'+r.categoryName+' / '+r.subName+'</td><td>'+r.task+'</td><td>'+fmtDate(r.startTime)+' '+fmtTime(r.startTime)+'</td><td>'+(r.endTime?fmtTime(r.endTime):'—')+'</td><td>'+(r.negative?'−':'')+dur+'</td></tr>';}).join('');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial</title><style>body{font-family:PPNeueMontreal,sans-serif;padding:40px;color:#111;background:#fff}h1{font-size:24px;font-weight:300;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:32px}table{width:100%;border-collapse:collapse;font-size:13px}th{border-bottom:1px solid #111;padding:10px 0;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:400}td{padding:12px 0;border-bottom:1px solid #eee}@media print{button{display:none}}</style></head><body><h1>Fichaje — Archviz Mallorca</h1><p>'+today()+' · '+recs.length+' registros</p><table><thead><tr><th>Empleado</th><th>Área</th><th>Tarea</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>'+rows+'</tbody></table><br><button onclick="window.print()" style="margin-top:24px;padding:12px 24px;border:1px solid #111;background:transparent;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase">Imprimir / PDF</button></body></html>');win.document.close();}
 
 initFirebase();
 
@@ -1747,6 +1824,40 @@ document.addEventListener('click',function(e){
     var ch=document.getElementById('dp-ch');if(ch)ch.classList.remove('open');
   }
 });
+</script>
+
+<!-- BIRTHDAY PARADE -->
+<canvas id="bday-canvas" style="display:none;position:fixed;bottom:0;left:0;width:100%;height:120px;pointer-events:none;z-index:9999"></canvas>
+<script>
+(function(){
+  function isBirthday(){var n=new Date();return n.getMonth()===5&&n.getDate()===4;}
+  var canvas=document.getElementById('bday-canvas');
+  var ctx=canvas.getContext('2d');
+  var W=0,H=120,rafId=null,last=null;
+  var conf=[];
+  var COLORS=['#f39c12','#e74c3c','#9b59b6','#3498db','#2ecc71','#e91e63','#ff5722','#00bcd4','#f1c40f','#1abc9c'];
+  function initScene(){
+    W=window.innerWidth;canvas.width=W;canvas.height=H;
+    conf=[];for(var i=0;i<90;i++){conf.push({x:Math.random()*W,y:Math.random()*H,w:5+Math.random()*8,h:3+Math.random()*5,c:COLORS[i%COLORS.length],a:Math.random()*360,vx:(Math.random()-0.5)*1.5,vy:-0.3-Math.random()*0.9,va:(Math.random()-0.5)*3.5});}
+  }
+  function frame(ts){
+    rafId=requestAnimationFrame(frame);
+    var dt=last?Math.min((ts-last)/1000,0.05):0.016;last=ts;
+    ctx.clearRect(0,0,W,H);
+    conf.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.a+=p.va;if(p.y<-10){p.y=H;p.x=Math.random()*W;}if(p.x<-10)p.x=W;if(p.x>W+10)p.x=0;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a*Math.PI/180);ctx.fillStyle=p.c;ctx.globalAlpha=0.85;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+    ctx.save();
+    ctx.font='700 28px PPNeueMontreal, Inter, sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillText('Molts d\'anys Joanmi \uD83C\uDF82',W/2+2,H/2+2);
+    ctx.fillStyle='#ffffff';ctx.fillText('Molts d\'anys Joanmi \uD83C\uDF82',W/2,H/2);
+    ctx.restore();
+  }
+  function show(){if(canvas.style.display==='block')return;canvas.style.display='block';initScene();last=null;rafId=requestAnimationFrame(frame);}
+  function hide(){canvas.style.display='none';if(rafId){cancelAnimationFrame(rafId);rafId=null;last=null;}}
+  function check(){var onReg=(typeof currentTab==='undefined'||currentTab==='fichaje');if(isBirthday()&&onReg){show();}else{hide();}}
+  window.addEventListener('resize',function(){if(canvas.style.display==='block'){W=window.innerWidth;canvas.width=W;}});
+  setTimeout(check,1000);setInterval(check,2000);
+})();
 </script>
 </body>
 </html>

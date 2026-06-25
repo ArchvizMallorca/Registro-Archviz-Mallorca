@@ -176,7 +176,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .cal-nav-btn:hover{border-color:var(--text);color:var(--text)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:32px}
 .cal-dow{background:var(--bg);padding:10px 4px;text-align:center;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2)}
-.cal-day{background:var(--bg);padding:10px 8px;min-height:72px;cursor:pointer;transition:background .15s;position:relative;display:flex;flex-direction:column;gap:4px}
+.cal-day{background:var(--bg);padding:10px 8px;min-height:96px;cursor:pointer;transition:background .15s;position:relative;display:flex;flex-direction:column;gap:4px}
 .cal-day:hover{background:var(--bg2)}
 .cal-day.other-month{opacity:.3}
 .cal-day.today .cal-day-num{color:#4ade80;font-weight:500}
@@ -509,7 +509,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 <script>
 var firebaseConfig={apiKey:"AIzaSyCTLHLZOLAHUG-5Q-WQCmaTKFGH9PeOHuw",authDomain:"registro-horas-archviz.firebaseapp.com",databaseURL:"https://registro-horas-archviz-default-rtdb.europe-west1.firebasedatabase.app",projectId:"registro-horas-archviz",storageBucket:"registro-horas-archviz.firebasestorage.app",messagingSenderId:"144534709826",appId:"1:144534709826:web:7b9d189ce16376b6b1efdb",measurementId:"G-FKSZQK4E9J"};
 
-var DEFAULT={employees:[{id:1,name:'Ana García',role:'Diseñadora'},{id:2,name:'Carlos López',role:'Desarrollador'},{id:3,name:'Marta Ruiz',role:'Product Manager'}],categories:[{id:'c1',name:'Proyectos',icon:'',subs:[{id:'c1s1',name:'Proyecto A',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']},{id:'c1s2',name:'Proyecto B',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']},{id:'c1s3',name:'Proyecto C',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']}]},{id:'c2',name:'Reuniones',icon:'',subs:[{id:'c2s1',name:'Interna',tasks:['Planificación','Seguimiento','Formación']},{id:'c2s2',name:'Cliente',tasks:['Presentación','Revisión','Feedback']}]},{id:'c3',name:'Administración',icon:'',subs:[{id:'c3s1',name:'Gestión',tasks:['Facturas','Presupuestos','Contratos']},{id:'c3s2',name:'RRHH',tasks:['Nóminas','Formación','Evaluaciones']}]}],records:[],notes:{},vacations:[],projectMeta:{},clientFolders:[],folderOpen:{}};
+var DEFAULT={employees:[{id:1,name:'Ana García',role:'Diseñadora'},{id:2,name:'Carlos López',role:'Desarrollador'},{id:3,name:'Marta Ruiz',role:'Product Manager'}],categories:[{id:'c1',name:'Proyectos',icon:'',subs:[{id:'c1s1',name:'Proyecto A',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']},{id:'c1s2',name:'Proyecto B',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']},{id:'c1s3',name:'Proyecto C',tasks:['Modelado','Mobiliario','Postproducción','Cambios','Brochure']}]},{id:'c2',name:'Reuniones',icon:'',subs:[{id:'c2s1',name:'Interna',tasks:['Planificación','Seguimiento','Formación']},{id:'c2s2',name:'Cliente',tasks:['Presentación','Revisión','Feedback']}]},{id:'c3',name:'Empresa',icon:'',subs:[{id:'c3s1',name:'Gestión',tasks:['Facturas','Presupuestos','Contratos']},{id:'c3s2',name:'RRHH',tasks:['Nóminas','Formación','Evaluaciones']}]}],records:[],notes:{},vacations:[],projectMeta:{},clientFolders:[],folderOpen:{}};
 
 var db=JSON.parse(JSON.stringify(DEFAULT)),fbReady=false,fbRef=null;
 var ICON_VAC_SM='<svg width="13" height="13" viewBox="364 212 82 82" style="vertical-align:middle;margin-right:3px" xmlns="http://www.w3.org/2000/svg"><path stroke="#fff" fill="#fff" stroke-miterlimit="10" d="M376.91,224.49c1.59-.14,5.94-.3,10.45,2.32,5.25,3.05,7.21,7.83,7.73,9.22,1.56-.43,8.2-2.06,15.29,1.51,7.51,3.79,10.07,10.68,10.56,12.1.96-.35,7-2.44,13.26.87,5.59,2.96,7.46,8.16,7.84,9.29.84-3.11,1.67-7.87.78-13.43-2.5-15.63-16.36-23.89-19.6-25.67-13.71-7.53-31.55-5.84-46.31,3.78Z"/><path stroke="#fff" fill="none" stroke-linejoin="round" d="M395.35,235.73c2.28-2.72,6.29-6.83,12.39-10.18,6.08-3.34,11.68-4.53,15.19-5,1.14,2.42,3.25,7.72,2.81,14.67-.45,7.11-3.33,12.18-4.8,14.43"/><line stroke="#fff" stroke-width="2" stroke-miterlimit="10" x1="422.59" y1="220.92" x2="387.36" y2="279.63"/><rect stroke="#fff" fill="#fff" stroke-miterlimit="10" x="369.49" y="279.05" width="74.71" height="11.4"/></svg>';
@@ -550,6 +550,15 @@ function sanitize(raw){
   return{employees:emps,categories:cats,records:recs,notes:raw.notes&&typeof raw.notes==='object'?raw.notes:{},vacations:vacs,projectMeta:raw.projectMeta&&typeof raw.projectMeta==='object'?raw.projectMeta:{},clientFolders:Array.isArray(raw.clientFolders)?raw.clientFolders:Object.values(raw.clientFolders||{}),folderOpen:raw.folderOpen&&typeof raw.folderOpen==='object'?raw.folderOpen:{}};
 }
 
+// Migraciones de datos que se ejecutan al cargar (idempotentes).
+function migrateData(){
+  var changed=false;
+  (db.categories||[]).forEach(function(c){
+    if(c.id==='c3'&&c.name==='Administración'){c.name='Empresa';changed=true;}
+  });
+  return changed;
+}
+
 function attachData(){
   if(fbRef)return;
   fbRef=firebase.database().ref('fichajeapp');
@@ -558,6 +567,7 @@ function attachData(){
     var val=snap.val();
     if(val){db=sanitize(val);}else{fbRef.set(clone(DEFAULT));db=clone(DEFAULT);}
     if(!fbReady){fbReady=true;document.getElementById('loading').classList.add('hidden');document.getElementById('app').classList.remove('hidden');}
+    if(migrateData())persist();
     setStatus('online');render(true);
   },function(){fbRef=null;fallbackLocal();});
 }
@@ -578,6 +588,7 @@ function initFirebase(){
 function fallbackLocal(){
   fbReady=true;fbRef=null;
   try{var raw=localStorage.getItem('fichajeapp_local');if(raw)db=sanitize(JSON.parse(raw));}catch(e){}
+  if(migrateData())persist();
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   setStatus('local');render();
@@ -794,7 +805,7 @@ function renderCalendar(){
     var barColor=h>=8?'#4ade80':h>=4?'#fbbf24':'#555';
     var vacHtml=vacs.length?'<div class="cal-vac-row">'+vacs.map(function(v){return '<span class="cal-vac-badge">'+ICON_VAC_SM+esc(v.initials)+'</span>';}).join('')+'</div>':'';
     html+='<div class="cal-day'+(key===todayStr?' today':'')+(key===selectedDay?' selected':'')+'" onclick="selectDay(\''+key+'\')"><div class="cal-day-num">'+d+'</div>'
-      +(empLines.length?'<div class="cal-day-hours" style="display:flex;flex-wrap:wrap;gap:2px 5px;">'+empLines.map(function(l){return '<span>'+esc(l)+'</span>';}).join('')+'</div>':'')
+      +(empLines.length?'<div class="cal-day-hours" style="display:flex;flex-direction:column;gap:1px;">'+empLines.map(function(l){return '<span>'+esc(l)+'</span>';}).join('')+'</div>':'')
       +(h>0?'<div class="cal-day-bar" style="background:'+barColor+';width:'+pct.toFixed(0)+'%"></div>':'')
       +vacHtml
       +(note?'<div class="cal-day-note-badge">Nota pendiente</div>':'')
@@ -811,8 +822,32 @@ function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalend
 var dayPanelMode='day';
 var dayPanelWeekSel=null;
 var dayPanelMonthSel=null;
+var detailCatMode='all'; // 'all' = todas juntas | 'split' = separado por categoría
 
 function selectDay(key){selectedDay=key;editingNote=false;dayPanelMode='day';dayPanelWeekSel=null;dayPanelMonthSel=null;renderCalendar();renderDayPanel(key);}
+
+function setDetailCatMode(m){detailCatMode=m;renderDayPanel(selectedDay);}
+function detailCatToggle(){
+  function b(m,label){var on=detailCatMode===m;return '<button onclick="setDetailCatMode(\''+m+'\')" style="flex:1;padding:9px;border:none;background:'+(on?'var(--bg3)':'var(--bg2)')+';color:'+(on?'var(--text)':'var(--muted)')+';font-family:\'PPNeueMontreal\',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-bottom:2px solid '+(on?'var(--text)':'transparent')+'">'+label+'</button>';}
+  return '<div style="display:flex;gap:1px;background:var(--border);margin-bottom:20px;max-width:360px">'+b('all','Todas las categorías')+b('split','Por categoría')+'</div>';
+}
+// Tarjetas de resumen por empleado, combinadas o separadas por categoría.
+function renderDetailCards(recs){
+  if(!recs.length)return '<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros.</div>';
+  if(detailCatMode!=='split')return renderWeekCards(recs);
+  var groups={},order=[];
+  recs.forEach(function(r){var k=r.categoryId||('_'+r.categoryName);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(r);});
+  var seq=[];db.categories.forEach(function(c){if(groups[c.id])seq.push(c.id);});
+  order.forEach(function(k){if(seq.indexOf(k)===-1)seq.push(k);});
+  var html='';
+  seq.forEach(function(k){
+    var g=groups[k];var c=db.categories.find(function(x){return x.id===k;});
+    var label=c?c.name:(g[0].categoryName||'Sin categoría');
+    var sub=0;g.forEach(function(r){var h=durH(r.startTime,r.endTime);sub+=r.negative?-h:h;});sub=Math.max(0,sub);
+    html+='<div style="margin-bottom:20px"><div class="proj-section-label" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)"><span>'+esc(label)+'</span><span style="color:var(--muted2)">'+sub.toFixed(1)+'h</span></div>'+renderWeekCards(g)+'</div>';
+  });
+  return html;
+}
 
 function toggleDpDropdown(){
   var dd=document.getElementById('dp-dd');var ch=document.getElementById('dp-ch');
@@ -905,27 +940,8 @@ function renderDayPanel(key){
     var note=db.notes&&db.notes[key]?db.notes[key]:'';
     var vacs=vacationsOnDay(key);
 
-    // Employee summary cards (like week/month view)
-    var dayCardsHtml='';
-    if(recs.length){
-      dayCardsHtml='<div class="week-grid" style="margin-bottom:24px">';
-      for(var i=0;i<db.employees.length;i++){
-        var emp=db.employees[i];
-        var erecs=recs.filter(function(r){return r.employeeId===emp.id;});
-        if(!erecs.length)continue;
-        var wh=0;erecs.forEach(function(r){var h=durH(r.startTime,r.endTime);wh+=r.negative?-h:h;});wh=Math.max(0,wh);
-        var cls=wh>8?'over':'';
-        var fc=wh>8?'#f87171':'var(--border2)';
-        var breakdown={};
-        erecs.forEach(function(r){var k=fmtActivity(r);var h=durH(r.startTime,r.endTime);breakdown[k]=(breakdown[k]||0)+(r.negative?-h:h);});
-        var rows='';for(var bk in breakdown){var v=breakdown[bk];rows+='<div class="week-row"><span class="week-row-label">'+esc(bk)+'</span><span class="week-row-val" style="color:'+(v<0?'#f87171':'var(--text)')+'">'+v.toFixed(1)+'h</span></div>';}
-        dayCardsHtml+='<div class="week-card"><div><div class="week-name">'+esc(emp.name)+'</div><div class="week-role">'+esc(emp.role)+'</div></div>'
-          +'<div class="week-hours-big '+cls+'">'+wh.toFixed(1)+'<span style="font-size:20px;color:var(--muted)">h</span></div>'
-          +(rows?'<div class="week-breakdown">'+rows+'</div>':'<div style="font-size:11px;color:var(--muted2);letter-spacing:1px">Sin desglose</div>')
-          +'</div>';
-      }
-      dayCardsHtml+='</div>';
-    }
+    // Tarjetas resumen por empleado (combinadas o separadas por categoría)
+    var dayCardsHtml=recs.length?('<div style="margin-bottom:24px">'+detailCatToggle()+renderDetailCards(recs)+'</div>'):'';
 
     var recRows=recs.length?recs.map(function(r){
       var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;var col=r.negative?'#f87171':'var(--text)';
@@ -971,7 +987,7 @@ function renderDayPanel(key){
     }
     var recs=selWeek?getRecsForWeek(selWeek):[];
     var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
-    var cardsHtml=recs.length?renderWeekCards(recs):'<div style="padding:16px;font-size:12px;color:var(--muted2)">'+(weeks.length?'Sin registros para esta semana.':'No hay semanas con registros aún.')+'</div>';
+    var cardsHtml=recs.length?(detailCatToggle()+renderDetailCards(recs)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">'+(weeks.length?'Sin registros para esta semana.':'No hay semanas con registros aún.')+'</div>';
 
     panel.innerHTML='<div class="day-panel">'
       +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selWeek?fmtWeekRange(selWeek):'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
@@ -990,7 +1006,7 @@ function renderDayPanel(key){
     }
     var recs=selMonth?getRecsForMonth(selMonth):[];
     var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
-    var cardsHtml=recs.length?renderWeekCards(recs):'<div style="padding:16px;font-size:12px;color:var(--muted2)">'+(months.length?'Sin registros para este mes.':'No hay meses con registros aún.')+'</div>';
+    var cardsHtml=recs.length?(detailCatToggle()+renderDetailCards(recs)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">'+(months.length?'Sin registros para este mes.':'No hay meses con registros aún.')+'</div>';
 
     panel.innerHTML='<div class="day-panel">'
       +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selMonth?fmtMonthLabel(selMonth):'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
@@ -1240,7 +1256,7 @@ function buildPeriodPDF(recs,periodLabel){
 }
 
 /* ── PROYECTOS ── */
-var projTab='proyectos'; // 'proyectos' | 'reuniones' | 'admin'
+var projTab='proyectos'; // 'proyectos' | 'admin' (Empresa)
 var projStatusTab='active'; // 'active' | 'standby' | 'done'
 var mmpSubId=null,mmpTargetStatus=null,mmpFolderSel=null;
 var projSearchQuery='';
@@ -1343,9 +1359,9 @@ function renderProyectos(){
   // Top-level section tabs
   var tabDefs=[
     {id:'proyectos',label:'Proyectos'},
-    {id:'reuniones',label:'Reuniones'},
-    {id:'admin',label:'Administración'}
+    {id:'admin',label:'Empresa'}
   ];
+  if(projTab!=='proyectos'&&projTab!=='admin')projTab='proyectos';
   html+='<div style="display:flex;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:32px">';
   tabDefs.forEach(function(td){
     html+='<button onclick="setProjTab(\''+td.id+'\')" style="flex:1;padding:13px 8px;border:none;background:'+(projTab===td.id?'var(--bg3)':'var(--bg2)')+';color:'+(projTab===td.id?'var(--text)':'var(--muted)')+';font-family:\'PPNeueMontreal\',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-bottom:2px solid '+(projTab===td.id?'var(--text)':'transparent')+';transition:all .2s">'+td.label+'</button>';
@@ -1371,23 +1387,10 @@ function renderProyectos(){
     renderProjSearchResults();
     return;
 
-  } else if(projTab==='reuniones'){
-    var reunCat=null;for(var i=0;i<db.categories.length;i++)if(db.categories[i].id==='c2'||db.categories[i].name==='Reuniones'){reunCat=db.categories[i];break;}
-    if(!reunCat){html+='<div style="color:var(--muted);font-size:12px;letter-spacing:1px">Sin categoría Reuniones.</div>';document.getElementById('proyectos-content').innerHTML=html;return;}
-    html+='<div class="proj-section-header"><div class="proj-section-label">Reuniones</div></div><div class="proj-grid">';
-    (reunCat.subs||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name,'es');}).forEach(function(sub){
-      var taskMap={},totalH=0;
-      for(var ti=0;ti<sub.tasks.length;ti++)taskMap[sub.tasks[ti]]=0;
-      for(var ri=0;ri<db.records.length;ri++){var r=db.records[ri];if(r.subId===sub.id&&r.endTime){var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;totalH+=delta;if(taskMap[r.task]!==undefined)taskMap[r.task]+=delta;}}
-      totalH=Math.max(0,totalH);var rows='';for(var t in taskMap){var tv=Math.max(0,taskMap[t]);rows+='<div class="proj-row"><span class="proj-row-name">'+esc(t)+'</span><span class="proj-row-val">'+tv.toFixed(1)+'h</span></div>';}
-      html+='<div class="proj-card"><div><div class="proj-cat">'+esc(reunCat.name)+'</div><div class="proj-name">'+esc(sub.name)+'</div></div><div class="proj-total">'+totalH.toFixed(1)+'<span style="font-size:16px;color:var(--muted)">h</span></div><div class="proj-total-label">Horas totales</div><div class="proj-rows">'+rows+'</div><div class="proj-bar"><div class="proj-fill" style="width:'+Math.min(100,totalH/40*100).toFixed(0)+'%"></div></div></div>';
-    });
-    html+='</div>';
-
   } else if(projTab==='admin'){
-    var adminCat=null;for(var i=0;i<db.categories.length;i++)if(db.categories[i].id==='c3'||db.categories[i].name==='Administración'){adminCat=db.categories[i];break;}
-    if(!adminCat){html+='<div style="color:var(--muted);font-size:12px;letter-spacing:1px">Sin categoría Administración.</div>';document.getElementById('proyectos-content').innerHTML=html;return;}
-    html+='<div class="proj-section-header"><div class="proj-section-label">Administración</div></div><div class="proj-grid">';
+    var adminCat=null;for(var i=0;i<db.categories.length;i++)if(db.categories[i].id==='c3'||db.categories[i].name==='Empresa'||db.categories[i].name==='Administración'){adminCat=db.categories[i];break;}
+    if(!adminCat){html+='<div style="color:var(--muted);font-size:12px;letter-spacing:1px">Sin categoría Empresa.</div>';document.getElementById('proyectos-content').innerHTML=html;return;}
+    html+='<div class="proj-section-header"><div class="proj-section-label">Empresa</div></div><div class="proj-grid">';
     (adminCat.subs||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name,'es');}).forEach(function(sub){
       var taskMap={},totalH=0;
       for(var ti=0;ti<sub.tasks.length;ti++)taskMap[sub.tasks[ti]]=0;
@@ -1587,7 +1590,7 @@ function exportCustomPDF(){
 function initHistorialFilters(){
   var empSel=document.getElementById('f-emp');if(!empSel)return;
   empSel.innerHTML='<option value="all">Todos</option>'+db.employees.map(function(e){return '<option value="'+e.id+'">'+esc(e.name)+'</option>';}).join('');
-  document.getElementById('f-cat').innerHTML='<option value="all">Todas</option>'+db.categories.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('');
+  document.getElementById('f-cat').innerHTML='<option value="all">Todas</option>'+db.categories.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('')+'<option value="vac">Vacaciones</option>';
 }
 
 function getHistFilters(){
@@ -1609,12 +1612,42 @@ function filterRecords(){
     return true;
   });
 }
+/* ── VACACIONES EN HISTORIAL ── */
+function vacDays(v){var a=new Date(v.from),b=new Date(v.to);return Math.round((b-a)/86400000)+1;}
+function filteredVacations(){
+  var f=getHistFilters();
+  var list=(db.vacations||[]).slice();
+  if(f.empId!=='all')list=list.filter(function(v){return v.employeeId===parseInt(f.empId);});
+  if(f.period==='custom'){var range=getCPTRange();if(range){var vf,vt;list=list.filter(function(v){vf=new Date(v.from+'T00:00:00');vt=new Date(v.to+'T23:59:59');return vt>=range.from&&vf<=range.to;});}else list=[];}
+  return list.sort(function(a,b){return b.from.localeCompare(a.from);});
+}
+function delVacById(id){if(!confirm('¿Eliminar estas vacaciones?'))return;db.vacations=(db.vacations||[]).filter(function(v){return v.id!==id;});persist();renderHistorial();renderCalendar();}
+function renderVacacionesHist(){
+  var list=filteredVacations();
+  var totalDays=list.reduce(function(acc,v){return acc+vacDays(v);},0);
+  var se=document.getElementById('hist-summary');
+  if(se){se.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:24px 32px;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:16px;align-items:flex-end">'
+    +'<div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Periodos</div><div style="font-size:22px;font-weight:300">'+list.length+'</div></div>'
+    +'<div><div style="font-size:11px;color:var(--muted);letter-spacing:1px">Días totales</div><div style="font-size:22px;font-weight:300">'+totalDays+'</div></div>'
+    +'<div style="margin-left:auto;display:flex;gap:8px;align-items:center"><button class="btn b-edit" onclick="openVacModal()" style="font-size:10px;letter-spacing:2px;padding:10px 16px">'+ICON_VAC_SM+' Añadir vacaciones</button></div></div>';}
+  var hc=document.getElementById('hist-content');
+  if(!list.length){hc.innerHTML='<div style="color:var(--muted);font-size:12px;letter-spacing:1px;padding:32px 0">Sin vacaciones para los filtros seleccionados.</div>';return;}
+  var rows=list.map(function(v){var d=vacDays(v);
+    return '<div class="vac-item" style="justify-content:space-between">'
+      +'<div style="display:flex;align-items:center;gap:10px">'+ICON_VAC_LG+'<div><div style="font-size:13px">'+esc(v.employeeName)+'</div><div style="font-size:11px;color:var(--muted2);letter-spacing:0.5px;margin-top:2px">'+isoToDisplay(v.from)+' → '+isoToDisplay(v.to)+' · '+d+' día'+(d!==1?'s':'')+'</div></div></div>'
+      +'<span onclick="delVacById('+v.id+')" style="cursor:pointer;font-size:14px;color:var(--muted2);padding:4px 8px" onmouseover="this.style.color=\'#f87171\'" onmouseout="this.style.color=\'var(--muted2)\'" title="Eliminar">✕</span>'
+      +'</div>';
+  }).join('');
+  hc.innerHTML='<div style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)">'+rows+'</div>';
+}
+
 function renderHistorial(){
   var empSel=document.getElementById('f-emp');if(empSel&&empSel.options.length<=1)initHistorialFilters();
   var period=document.getElementById('f-period')?document.getElementById('f-period').value:'all';
   var cw=document.getElementById('f-custom-wrap');if(cw)cw.style.display=period==='custom'?'block':'none';
   var ns=document.getElementById('f-normal-spacer');if(ns)ns.style.display=period==='custom'?'none':'block';
   if(period==='custom')populateCPTSelectors();
+  if(getHistFilters().catId==='vac'){renderVacacionesHist();return;}
   var recs=filterRecords().sort(function(a,b){return new Date(b.startTime)-new Date(a.startTime);});
   var totalH=recs.filter(function(r){return r.endTime&&!r.negative;}).reduce(function(acc,r){return acc+durH(r.startTime,r.endTime);},0);
   var active=recs.filter(function(r){return!r.endTime;}).length;

@@ -822,6 +822,7 @@ function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalend
 var dayPanelMode='day';
 var dayPanelWeekSel=null;
 var dayPanelMonthSel=null;
+var dayPanelYearSel=null;
 var detailCatMode='all'; // 'all' = todas | id de categoría (c1 Proyectos / c3 Empresa) | 'vac' = vacaciones
 
 function selectDay(key){selectedDay=key;editingNote=false;dayPanelMode='day';dayPanelWeekSel=null;dayPanelMonthSel=null;renderCalendar();renderDayPanel(key);}
@@ -841,15 +842,29 @@ function detailCatSelect(){
 function vacationsInRange(from,to){
   return (db.vacations||[]).filter(function(v){var vf=new Date(v.from+'T00:00:00'),vt=new Date(v.to+'T23:59:59');return vt>=from&&vf<=to;}).sort(function(a,b){return a.from.localeCompare(b.from);});
 }
-function renderVacScopeCards(vacs){
+function dayFloor(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+// Días de unas vacaciones que caen dentro del período [from,to].
+function vacDaysInRange(v,from,to){
+  var vf=new Date(v.from+'T00:00:00'),vt=new Date(v.to+'T00:00:00');
+  var s=dayFloor(vf>from?vf:from),e=dayFloor(vt<to?vt:to);
+  var d=Math.round((e-s)/86400000)+1;return d>0?d:0;
+}
+function renderVacScopeCards(vacs,from,to){
   if(!vacs||!vacs.length)return '<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin vacaciones en este período.</div>';
-  return '<div style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)">'
-    +vacs.map(function(v){var d=vacDays(v);return '<div class="vac-item">'+ICON_VAC_LG+'<div style="margin-left:8px"><div style="font-size:13px">'+esc(v.employeeName)+'</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">'+isoToDisplay(v.from)+' → '+isoToDisplay(v.to)+' · '+d+' día'+(d!==1?'s':'')+'</div></div></div>';}).join('')
+  // Resumen por empleado: días totales dentro del período mostrado
+  var byEmp={};
+  vacs.forEach(function(v){var d=(from&&to)?vacDaysInRange(v,from,to):vacDays(v);if(!byEmp[v.employeeId])byEmp[v.employeeId]={name:v.employeeName,days:0};byEmp[v.employeeId].days+=d;});
+  var sum=Object.keys(byEmp).map(function(k){return byEmp[k];}).sort(function(a,b){return b.days-a.days;});
+  var summaryHtml='<div class="week-grid" style="margin-bottom:20px">'+sum.map(function(e){return '<div class="week-card"><div class="week-name">'+esc(e.name)+'</div><div class="week-hours-big">'+e.days+'<span style="font-size:20px;color:var(--muted)"> días</span></div><div class="week-goal">Vacaciones en este período</div></div>';}).join('')+'</div>';
+  // Lista de periodos
+  var listHtml='<div style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)">'
+    +vacs.map(function(v){var d=(from&&to)?vacDaysInRange(v,from,to):vacDays(v);return '<div class="vac-item">'+ICON_VAC_LG+'<div style="margin-left:8px"><div style="font-size:13px">'+esc(v.employeeName)+'</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">'+isoToDisplay(v.from)+' → '+isoToDisplay(v.to)+' · '+d+' día'+(d!==1?'s':'')+'</div></div></div>';}).join('')
     +'</div>';
+  return summaryHtml+listHtml;
 }
 // Cuerpo del detalle según la categoría elegida en el desplegable.
-function renderDetailScope(recs,vacs){
-  if(detailCatMode==='vac')return renderVacScopeCards(vacs);
+function renderDetailScope(recs,vacs,vfrom,vto){
+  if(detailCatMode==='vac')return renderVacScopeCards(vacs,vfrom,vto);
   var f=(detailCatMode==='all')?recs:recs.filter(function(r){return r.categoryId===detailCatMode;});
   if(!f.length)return '<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros.</div>';
   return renderWeekCards(f);
@@ -866,6 +881,7 @@ function setDpMode(mode){
   dayPanelMode=mode;editingNote=false;
   if(mode==='week'){var weeks=getAllWeeksWithRecords();dayPanelWeekSel=weeks.length?weeks[0]:null;}
   if(mode==='month'){var months=getAllMonthsWithRecords();dayPanelMonthSel=months.length?months[0]:null;}
+  if(mode==='year'){var years=getAllYearsWithRecords();dayPanelYearSel=years.length?years[0]:null;}
   renderDayPanel(selectedDay);
 }
 function onDayPanelWeekChange(){
@@ -874,6 +890,10 @@ function onDayPanelWeekChange(){
 }
 function onDayPanelMonthChange(){
   var sel=document.getElementById('dp-month-sel');if(sel)dayPanelMonthSel=sel.value;
+  renderDayPanel(selectedDay);
+}
+function onDayPanelYearChange(){
+  var sel=document.getElementById('dp-year-sel');if(sel)dayPanelYearSel=sel.value;
   renderDayPanel(selectedDay);
 }
 
@@ -911,6 +931,16 @@ function getRecsForMonth(ym){
   return db.records.filter(function(r){var rd=new Date(r.startTime);return r.endTime&&rd>=from&&rd<=to;});
 }
 
+function getAllYearsWithRecords(){
+  var years={};
+  db.records.forEach(function(r){if(!r.endTime)return;years[new Date(r.startTime).getFullYear()]=true;});
+  return Object.keys(years).sort(function(a,b){return b.localeCompare(a);});
+}
+function getRecsForYear(y){
+  var from=new Date(parseInt(y),0,1,0,0,0,0),to=new Date(parseInt(y),11,31,23,59,59,999);
+  return db.records.filter(function(r){var rd=new Date(r.startTime);return r.endTime&&rd>=from&&rd<=to;});
+}
+
 function renderWeekCards(recs){
   var html='<div class="week-grid">';
   for(var i=0;i<db.employees.length;i++){
@@ -933,11 +963,11 @@ function renderDayPanel(key){
   var mode=dayPanelMode||'day';
 
   // Build the styled custom title dropdown
-  var modeLabels={day:'Detalle del día',week:'Detalle de la semana',month:'Detalle del mes'};
+  var modeLabels={day:'Detalle del día',week:'Detalle de la semana',month:'Detalle del mes',year:'Detalle del año'};
   var titleSel='<div class="dp-title-wrap">'
     +'<button class="dp-title-btn" onclick="toggleDpDropdown()" id="dp-btn">'+modeLabels[mode]+'<span class="dp-chevron" id="dp-ch">▾</span></button>'
     +'<div class="dp-dropdown" id="dp-dd">'
-    +['day','week','month'].map(function(m){return '<div class="dp-option'+(mode===m?' dp-active':'')+' " onclick="setDpMode(&quot;'+m+'&quot;)">'+modeLabels[m]+'</div>';}).join('')
+    +['day','week','month','year'].map(function(m){return '<div class="dp-option'+(mode===m?' dp-active':'')+' " onclick="setDpMode(&quot;'+m+'&quot;)">'+modeLabels[m]+'</div>';}).join('')
     +'</div></div>';
 
   if(mode==='day'){
@@ -947,8 +977,9 @@ function renderDayPanel(key){
     var vacs=vacationsOnDay(key);
 
     // Tarjetas resumen por empleado, con desplegable de categoría (incl. Vacaciones)
-    var vacsDay=vacationsInRange(new Date(key+'T00:00:00'),new Date(key+'T23:59:59'));
-    var dayCardsHtml='<div style="margin-bottom:24px">'+detailCatSelect()+renderDetailScope(recs,vacsDay)+'</div>';
+    var dFrom=new Date(key+'T00:00:00'),dTo=new Date(key+'T23:59:59');
+    var vacsDay=vacationsInRange(dFrom,dTo);
+    var dayCardsHtml='<div style="margin-bottom:24px">'+detailCatSelect()+renderDetailScope(recs,vacsDay,dFrom,dTo)+'</div>';
 
     var recRows=recs.length?recs.map(function(r){
       var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;var col=r.negative?'#f87171':'var(--text)';
@@ -994,9 +1025,9 @@ function renderDayPanel(key){
     }
     var recs=selWeek?getRecsForWeek(selWeek):[];
     var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
-    var vacsWeek=[];
-    if(selWeek){var wp=selWeek.split('-');var wmon=new Date(parseInt(wp[0]),parseInt(wp[1])-1,parseInt(wp[2]),0,0,0,0);var wsun=new Date(wmon);wsun.setDate(wmon.getDate()+6);wsun.setHours(23,59,59,999);vacsWeek=vacationsInRange(wmon,wsun);}
-    var cardsHtml=selWeek?(detailCatSelect()+renderDetailScope(recs,vacsWeek)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">No hay semanas con registros aún.</div>';
+    var vacsWeek=[],wmon,wsun;
+    if(selWeek){var wp=selWeek.split('-');wmon=new Date(parseInt(wp[0]),parseInt(wp[1])-1,parseInt(wp[2]),0,0,0,0);wsun=new Date(wmon);wsun.setDate(wmon.getDate()+6);wsun.setHours(23,59,59,999);vacsWeek=vacationsInRange(wmon,wsun);}
+    var cardsHtml=selWeek?(detailCatSelect()+renderDetailScope(recs,vacsWeek,wmon,wsun)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">No hay semanas con registros aún.</div>';
 
     panel.innerHTML='<div class="day-panel">'
       +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selWeek?fmtWeekRange(selWeek):'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
@@ -1015,14 +1046,35 @@ function renderDayPanel(key){
     }
     var recs=selMonth?getRecsForMonth(selMonth):[];
     var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
-    var vacsMonth=[];
-    if(selMonth){var mp=selMonth.split('-');var mfrom=new Date(parseInt(mp[0]),parseInt(mp[1])-1,1,0,0,0,0);var mto=new Date(parseInt(mp[0]),parseInt(mp[1]),0,23,59,59,999);vacsMonth=vacationsInRange(mfrom,mto);}
-    var cardsHtml=selMonth?(detailCatSelect()+renderDetailScope(recs,vacsMonth)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">No hay meses con registros aún.</div>';
+    var vacsMonth=[],mfrom,mto;
+    if(selMonth){var mp=selMonth.split('-');mfrom=new Date(parseInt(mp[0]),parseInt(mp[1])-1,1,0,0,0,0);mto=new Date(parseInt(mp[0]),parseInt(mp[1]),0,23,59,59,999);vacsMonth=vacationsInRange(mfrom,mto);}
+    var cardsHtml=selMonth?(detailCatSelect()+renderDetailScope(recs,vacsMonth,mfrom,mto)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">No hay meses con registros aún.</div>';
 
     panel.innerHTML='<div class="day-panel">'
       +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selMonth?fmtMonthLabel(selMonth):'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
       +'<div style="text-align:right"><div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Total mes</div><div class="day-panel-total">'+totalH.toFixed(1)+'h</div></div></div>'
       +monthSelHtml+cardsHtml+'</div>';
+
+  } else if(mode==='year'){
+    var years=getAllYearsWithRecords();
+    var selYear=dayPanelYearSel||(years.length?years[0]:null);
+    var yearSelHtml='';
+    if(years.length){
+      yearSelHtml='<div style="margin-bottom:24px"><div class="lbl" style="margin-bottom:8px">Año</div>'
+        +'<select id="dp-year-sel" onchange="onDayPanelYearChange()" class="sel" style="font-size:12px;padding:6px 0;max-width:360px">'
+        +years.map(function(y){return '<option value="'+y+'"'+(y===selYear?' selected':'')+'>'+y+'</option>';}).join('')
+        +'</select></div>';
+    }
+    var recs=selYear?getRecsForYear(selYear):[];
+    var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
+    var vacsYear=[],yfrom,yto;
+    if(selYear){yfrom=new Date(parseInt(selYear),0,1,0,0,0,0);yto=new Date(parseInt(selYear),11,31,23,59,59,999);vacsYear=vacationsInRange(yfrom,yto);}
+    var cardsHtml=selYear?(detailCatSelect()+renderDetailScope(recs,vacsYear,yfrom,yto)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">No hay años con registros aún.</div>';
+
+    panel.innerHTML='<div class="day-panel">'
+      +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selYear||'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Total año</div><div class="day-panel-total">'+totalH.toFixed(1)+'h</div></div></div>'
+      +yearSelHtml+cardsHtml+'</div>';
   }
 }
 

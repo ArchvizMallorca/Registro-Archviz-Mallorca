@@ -4,7 +4,7 @@ setlocal
 
 REM ===== CONFIGURACION =====
 REM Cada cuantos minutos se suben los cambios a GitHub:
-set INTERVALO=10
+set INTERVALO=2
 set TAREA=ArchvizAutoPush
 REM =========================
 

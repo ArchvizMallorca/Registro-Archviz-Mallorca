@@ -822,31 +822,37 @@ function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalend
 var dayPanelMode='day';
 var dayPanelWeekSel=null;
 var dayPanelMonthSel=null;
-var detailCatMode='all'; // 'all' = todas juntas | 'split' = separado por categoría
+var detailCatMode='all'; // 'all' = todas | id de categoría (c1 Proyectos / c3 Empresa) | 'vac' = vacaciones
 
 function selectDay(key){selectedDay=key;editingNote=false;dayPanelMode='day';dayPanelWeekSel=null;dayPanelMonthSel=null;renderCalendar();renderDayPanel(key);}
 
-function setDetailCatMode(m){detailCatMode=m;renderDayPanel(selectedDay);}
-function detailCatToggle(){
-  function b(m,label){var on=detailCatMode===m;return '<button onclick="setDetailCatMode(\''+m+'\')" style="flex:1;padding:9px;border:none;background:'+(on?'var(--bg3)':'var(--bg2)')+';color:'+(on?'var(--text)':'var(--muted)')+';font-family:\'PPNeueMontreal\',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-bottom:2px solid '+(on?'var(--text)':'transparent')+'">'+label+'</button>';}
-  return '<div style="display:flex;gap:1px;background:var(--border);margin-bottom:20px;max-width:360px">'+b('all','Todas las categorías')+b('split','Por categoría')+'</div>';
+function onDetailCatChange(v){detailCatMode=v;renderDayPanel(selectedDay);}
+// Desplegable para elegir qué categoría ver en el detalle: Todas, Proyectos, Empresa o Vacaciones.
+function detailCatSelect(){
+  var projCat=db.categories.find(function(c){return c.id==='c1'||c.name==='Proyectos';});
+  var empCat=db.categories.find(function(c){return c.id==='c3'||c.name==='Empresa'||c.name==='Administración';});
+  var opts='<option value="all"'+(detailCatMode==='all'?' selected':'')+'>Todas las categorías</option>';
+  if(projCat)opts+='<option value="'+projCat.id+'"'+(detailCatMode===projCat.id?' selected':'')+'>'+esc(projCat.name)+'</option>';
+  if(empCat)opts+='<option value="'+empCat.id+'"'+(detailCatMode===empCat.id?' selected':'')+'>'+esc(empCat.name)+'</option>';
+  opts+='<option value="vac"'+(detailCatMode==='vac'?' selected':'')+'>Vacaciones</option>';
+  return '<div style="margin-bottom:20px"><div class="lbl" style="margin-bottom:8px">Ver categoría</div><select onchange="onDetailCatChange(this.value)" class="sel" style="font-size:12px;padding:6px 0;max-width:360px">'+opts+'</select></div>';
 }
-// Tarjetas de resumen por empleado, combinadas o separadas por categoría.
-function renderDetailCards(recs){
-  if(!recs.length)return '<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros.</div>';
-  if(detailCatMode!=='split')return renderWeekCards(recs);
-  var groups={},order=[];
-  recs.forEach(function(r){var k=r.categoryId||('_'+r.categoryName);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(r);});
-  var seq=[];db.categories.forEach(function(c){if(groups[c.id])seq.push(c.id);});
-  order.forEach(function(k){if(seq.indexOf(k)===-1)seq.push(k);});
-  var html='';
-  seq.forEach(function(k){
-    var g=groups[k];var c=db.categories.find(function(x){return x.id===k;});
-    var label=c?c.name:(g[0].categoryName||'Sin categoría');
-    var sub=0;g.forEach(function(r){var h=durH(r.startTime,r.endTime);sub+=r.negative?-h:h;});sub=Math.max(0,sub);
-    html+='<div style="margin-bottom:20px"><div class="proj-section-label" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)"><span>'+esc(label)+'</span><span style="color:var(--muted2)">'+sub.toFixed(1)+'h</span></div>'+renderWeekCards(g)+'</div>';
-  });
-  return html;
+// Vacaciones que se solapan con un rango de fechas.
+function vacationsInRange(from,to){
+  return (db.vacations||[]).filter(function(v){var vf=new Date(v.from+'T00:00:00'),vt=new Date(v.to+'T23:59:59');return vt>=from&&vf<=to;}).sort(function(a,b){return a.from.localeCompare(b.from);});
+}
+function renderVacScopeCards(vacs){
+  if(!vacs||!vacs.length)return '<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin vacaciones en este período.</div>';
+  return '<div style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)">'
+    +vacs.map(function(v){var d=vacDays(v);return '<div class="vac-item">'+ICON_VAC_LG+'<div style="margin-left:8px"><div style="font-size:13px">'+esc(v.employeeName)+'</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">'+isoToDisplay(v.from)+' → '+isoToDisplay(v.to)+' · '+d+' día'+(d!==1?'s':'')+'</div></div></div>';}).join('')
+    +'</div>';
+}
+// Cuerpo del detalle según la categoría elegida en el desplegable.
+function renderDetailScope(recs,vacs){
+  if(detailCatMode==='vac')return renderVacScopeCards(vacs);
+  var f=(detailCatMode==='all')?recs:recs.filter(function(r){return r.categoryId===detailCatMode;});
+  if(!f.length)return '<div style="padding:16px;font-size:12px;color:var(--muted2)">Sin registros.</div>';
+  return renderWeekCards(f);
 }
 
 function toggleDpDropdown(){
@@ -940,8 +946,9 @@ function renderDayPanel(key){
     var note=db.notes&&db.notes[key]?db.notes[key]:'';
     var vacs=vacationsOnDay(key);
 
-    // Tarjetas resumen por empleado (combinadas o separadas por categoría)
-    var dayCardsHtml=recs.length?('<div style="margin-bottom:24px">'+detailCatToggle()+renderDetailCards(recs)+'</div>'):'';
+    // Tarjetas resumen por empleado, con desplegable de categoría (incl. Vacaciones)
+    var vacsDay=vacationsInRange(new Date(key+'T00:00:00'),new Date(key+'T23:59:59'));
+    var dayCardsHtml='<div style="margin-bottom:24px">'+detailCatSelect()+renderDetailScope(recs,vacsDay)+'</div>';
 
     var recRows=recs.length?recs.map(function(r){
       var h=durH(r.startTime,r.endTime);var delta=r.negative?-h:h;var col=r.negative?'#f87171':'var(--text)';
@@ -987,7 +994,9 @@ function renderDayPanel(key){
     }
     var recs=selWeek?getRecsForWeek(selWeek):[];
     var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
-    var cardsHtml=recs.length?(detailCatToggle()+renderDetailCards(recs)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">'+(weeks.length?'Sin registros para esta semana.':'No hay semanas con registros aún.')+'</div>';
+    var vacsWeek=[];
+    if(selWeek){var wp=selWeek.split('-');var wmon=new Date(parseInt(wp[0]),parseInt(wp[1])-1,parseInt(wp[2]),0,0,0,0);var wsun=new Date(wmon);wsun.setDate(wmon.getDate()+6);wsun.setHours(23,59,59,999);vacsWeek=vacationsInRange(wmon,wsun);}
+    var cardsHtml=selWeek?(detailCatSelect()+renderDetailScope(recs,vacsWeek)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">No hay semanas con registros aún.</div>';
 
     panel.innerHTML='<div class="day-panel">'
       +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selWeek?fmtWeekRange(selWeek):'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
@@ -1006,7 +1015,9 @@ function renderDayPanel(key){
     }
     var recs=selMonth?getRecsForMonth(selMonth):[];
     var totalH=Math.max(0,recs.reduce(function(acc,r){var h=durH(r.startTime,r.endTime);return acc+(r.negative?-h:h);},0));
-    var cardsHtml=recs.length?(detailCatToggle()+renderDetailCards(recs)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">'+(months.length?'Sin registros para este mes.':'No hay meses con registros aún.')+'</div>';
+    var vacsMonth=[];
+    if(selMonth){var mp=selMonth.split('-');var mfrom=new Date(parseInt(mp[0]),parseInt(mp[1])-1,1,0,0,0,0);var mto=new Date(parseInt(mp[0]),parseInt(mp[1]),0,23,59,59,999);vacsMonth=vacationsInRange(mfrom,mto);}
+    var cardsHtml=selMonth?(detailCatSelect()+renderDetailScope(recs,vacsMonth)):'<div style="padding:16px;font-size:12px;color:var(--muted2)">No hay meses con registros aún.</div>';
 
     panel.innerHTML='<div class="day-panel">'
       +'<div class="day-panel-header"><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">'+(selMonth?fmtMonthLabel(selMonth):'—')+'</div><div class="day-panel-date" style="display:flex;align-items:center;gap:4px">'+titleSel+'</div></div>'
